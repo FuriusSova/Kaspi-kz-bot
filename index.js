@@ -72,6 +72,7 @@ let post = {};
 
 const parseTop100 = async (url, flag) => {
     try {
+        posts = [];
         let $1;
         let arrOfLinks = [];
         let sign;
