@@ -204,6 +204,7 @@ const allParsing = async () => {
         await parseTop100("https://kaspi.kz/shop/c/home/all/", "category");
         await createExcel("home");
 
+        /*
         await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category");
         await createExcel("clothes");
 
@@ -281,6 +282,7 @@ const allParsing = async () => {
 
         await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B1%D0%BE%D0%BB%D0%B5%D0%B5+500+000+%D1%82", "price");
         await createExcel("moreThan500000");
+        */
     } catch (error) {
         console.log(error)
     }
