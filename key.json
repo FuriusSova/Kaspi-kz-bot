@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "kaspiparser-353119",
+  "private_key_id": "32d88847013d79268af25f6106150ee4fdbd5105",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC9Ogyg83+TSXDN\n7ip3UPyCyO+k0HxYRFg3TRj1gsGJliMDKShS0LEf8zHvmthW3irzW/ZCm5fJBvmy\nzHDmjWoZCx9/vpJ47hBzDdGY4H/HoL6RKs8C122bptKLIBAAxRYK1gIX1E2XG8MW\nSuKk2F93G/LQR1uR88lnDH8gpiLeW8m/9qHbVujP5d85uG5UwmCL52LX+HSjXPv+\nOZtq0Y9wiScevRxhFABs+clY3gg04OrDqDfoRT1GgFqaVfk7IMJZH9Hi8USs9tRD\nKXw2p0a2S2SY/UGrZzWrf/0z/UyXdXsHkTvX0vxSukY8TLwrGObVt5XhwIXOn/r7\nnIhTwJfdAgMBAAECggEAG8+MS5t+BIemrJ10YFTmx9IAZpi9rbtdu8L5CBxPlYkb\nXDuQUZuabLexfyWi5iGA7oN1jhSQGluMF1s0vK3MCiI4Xu4DWQKkKES/qVhVb2GQ\noIVKJ4DB+z5pc0kjEPnmY3FQnW/2d179LSmUZeXnIfpZlYLnUmwiDaMojAPe3A8g\nWrNE94MY3jOTVudJcRGG+I+wuN0v2JnmhS0y8J4AnMozmOVjCSWObQgtNJS7rDJ/\n/+xnWeO75Yjx54iGmm0mzsfA1v6aIO0/q2w6KztAh0823ZXwVxz7cULtvoFtaycA\nfaiVHSoB1IT1HNa0oSTGhk7M+prJNKgZOn4nkxbcAQKBgQD2jY0H+ZwIi824tGbZ\nD0Dl7WHz7lWzM3n7qKvLCVnvomRXswvX3MoAuevzFl+sGUnRKbKa7OSZZ2mrjFvf\nhRbGJRrqwrwen8k/0XmIUl9vWVskkAV7GK6w6geRIHD2Me9+3J1KgwKynEbksh4L\nXsYh/UExSGgzIdRBVOgcax+bpQKBgQDEei7s8azVLMzXJVrt7TAK75EX7zg2OgvZ\nPF2LjGR0kXiS8/VqZyTNBqcUbqsBFGjZUwnU8pPxBTt7ljRoup3wZ4M2QWRSSjfF\nHgW0VNPcZeAjoN3j/mFGSnGlBYl4FQim/nxfvkx8yCF6KA+bwJd0mqjpBtpZEYuR\nm+CXrSK12QKBgCczUl0WPszNDaR0anXQiw0DtTNHjbC0Woy8wLPDhN0pALNA8H0d\nybBb3zwDLqr6SlZLPu6LA72wR4jTBDiBvKE8fQ8ebzKfTSwsbhpSnoHhvzANBhIQ\nVpYiX5mfgtZiEiYlhYy3T9J+LndmKoi8RNxam+buEEMw+cJ5cX4zOg9RAoGANdlv\nBw3t2rdepRDd7Rv28OhcEf1EoMgj+zQqR1cBKVm9fDlU6AbA9Vh/boAuaitX2UiD\nB1Q86/ANL4ApeRK8uukD81jU0CD7TBFAav5c2qkpV1p9tkFAE+3PW/U6iijpqCtT\nl0Im4IRReJOGQ5/zYsgIx2VTbtn6MLxSP//55XECgYEA8KeLdHNVKoDT6RxIdR1+\nnhZwERsS01AeiJ8Be+UJ/laoUaKWpW5FvCk2Ct/8ssvoP3rcviLDrdIYA8iJRgqJ\nRRw0GQJHnOxd6mYSkAEZ9VYBfeACWCDz7SjRQbQYnf7q1rswoCbOX0Sw8sQFr1vJ\n00Cbbppe7Ln3zVNooSRXBiE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "googledriveservice-for-kaspi@kaspiparser-353119.iam.gserviceaccount.com",
+  "client_id": "117970153238214224346",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledriveservice-for-kaspi%40kaspiparser-353119.iam.gserviceaccount.com"
+}
