@@ -23,6 +23,7 @@ const auth = new google.auth.GoogleAuth({
 let RegExp = /^((ftp|http|https):\/\/)?(www\.)?([A-Za-zА-Яа-я0-9]{1}[A-Za-zА-Яа-я0-9\-]*\.?)*\.{1}[A-Za-zА-Яа-я0-9-]{2,8}(\/([\w#!:.?+=&%@!\-\/])*)?/;
 
 const LAUNCH_PUPPETEER_OPTS = {
+    headless: true,
     args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -147,9 +148,12 @@ const checkMember = async (msg, id) => {
     }
 }
 
+let workbook;
+let worksheet;
+
 const createExcel = async (name, msg) => {
-    const workbook = new Excel.Workbook();
-    const worksheet = workbook.addWorksheet('Отчёт');
+    workbook = new Excel.Workbook();
+    worksheet = workbook.addWorksheet('Отчёт');
     worksheet.columns = [
         { header: 'Название товара', key: 'name' },
         { header: 'Артикул товара', key: 'articul' },
@@ -164,7 +168,7 @@ const createExcel = async (name, msg) => {
     })
     worksheet.getRow(1).font = { bold: true };
     posts.forEach((e, index) => {
-        worksheet.addRow({ ...e, date: new Date(Date.now()).toISOString() });
+        worksheet.addRow({ ...e, date: new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Europe/Kiev' }) });
     })
     await workbook.xlsx.writeFile(`./Reports/${name}Report${msg ? msg.chat.id : ""}.xlsx`)
 }
@@ -202,58 +206,58 @@ const allParsing = async () => {
 
         await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category");
         await createExcel("clothes");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/jewelry%20and%20bijouterie/all/", "category");
         await createExcel("jewellery");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/car%20goods/all/", "category");
         await createExcel("vehicles");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/construction%20and%20repair/all/", "category");
         await createExcel("building");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/beauty%20care/all/", "category");
         await createExcel("health");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/leisure/all/", "category");
         await createExcel("entertainment");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category");
         await createExcel("sport");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/shoes/all/", "category");
         await createExcel("shoes");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category");
         await createExcel("children");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/fashion%20accessories/all/", "category");
         await createExcel("trinkets");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/pharmacy/all/", "category");
         await createExcel("pharmacy");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/home%20equipment/all/", "category");
         await createExcel("technique");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/computers/all/", "category");
         await createExcel("computers");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/food/all/", "category");
         await createExcel("grocery");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category");
         await createExcel("gadgets");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/tv_audio/all/", "category");
         await createExcel("video");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/pet%20goods/all/", "category");
         await createExcel("animals");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/office%20and%20school%20supplies/all/", "category");
         await createExcel("office");
-        
+
         await parseTop100("https://kaspi.kz/shop/c/gifts%20and%20party%20supplies/all/", "category");
         await createExcel("gifts");
 

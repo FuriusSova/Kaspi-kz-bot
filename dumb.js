@@ -1,0 +1,1 @@
+console.log(new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Europe/Kiev' }));
