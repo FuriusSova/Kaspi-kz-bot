@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-const sequelize = new Sequelize(`${process.env.DATABASE_URL}?sslmode=no-verify`);
+const sequelize = new Sequelize(`${process.env.DATABASE_URL}?sslmode=no-verify`, {timezone: "+06:00"});
 
 const connect = async () => {
     await sequelize.authenticate();
