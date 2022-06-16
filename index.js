@@ -365,16 +365,6 @@ bot.on("message", async (msg) => {
                 ]
             }
         });
-        if (!checkDemoFiles()) {
-            await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category");
-            await createExcel("demoCategory");
-
-            await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand");
-            await createExcel("demoBrand");
-
-            await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word");
-            await createExcel("demoWord");
-        }
         const createdUser = await User.findOne({ where: { chat_id: msg.chat.id } });
         if (!createdUser) {
             const newUser = await User.create({
@@ -518,7 +508,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
 ••••••••••••••••••••••••••••••••••••••••
 🛍 За 14 дней ≈ ${data.sellsFor14Days} продаж(и)
 ••••••••••••••••••••••••••••••••••••••••
-📆 Кол-во продаж в день ≈ ${Math.round(data.sellsFor14Days/14)} шт.
+📆 Кол-во продаж в день ≈ ${Math.round(data.sellsFor14Days / 14)} шт.
 ••••••••••••••••••••••••••••••••••••••••
 💳 Примерная выручка ≈ ${data.price} ₸
 ••••••••••••••••••••••••••••••••••••••••
@@ -951,17 +941,17 @@ bot.on('callback_query', async (callbackQuery) => {
             await filesSender(data, msg.chat.id)
         } else if (data == "demoCategory") {
             await bot.sendDocument(msg.chat.id, "./Reports/demoCategoryReport.xlsx");
-            await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id});
+            await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         } else if (data == "demoBrand") {
             user.isOrderBrandReport = false;
             await user.save();
             await bot.sendDocument(msg.chat.id, "./Reports/demoBrandReport.xlsx");
-            await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id});
+            await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         } else if (data == "demoWord") {
             user.isOrderKeyWordReport = false;
             await user.save();
             await bot.sendDocument(msg.chat.id, "./Reports/demoWordReport.xlsx");
-            await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id});
+            await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         } else if (data == "quest1") {
             await bot.sendMessage(msg.chat.id, vars.answerQuest1)
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
@@ -986,3 +976,16 @@ bot.on('callback_query', async (callbackQuery) => {
         await bot.sendMessage(msg.chat.id, "Произошла ошибка (отчет может быть еще не готов)")
     }
 });
+
+(async function () {
+    if (!await checkDemoFiles()) {
+        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category");
+        await createExcel("demoCategory");
+
+        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand");
+        await createExcel("demoBrand");
+
+        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word");
+        await createExcel("demoWord");
+    }
+}())
