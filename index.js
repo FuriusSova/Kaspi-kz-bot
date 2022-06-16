@@ -176,28 +176,33 @@ let workbook;
 let worksheet;
 
 const createExcel = async (name, msg, posts) => {
-    workbook = new Excel.Workbook();
-    worksheet = workbook.addWorksheet('Отчёт');
-    worksheet.columns = [
-        { header: 'Название товара', key: 'name' },
-        { header: 'Артикул товара', key: 'articul' },
-        { header: 'Примерная выручка за 14 дней', key: 'priceFor14Days' },
-        { header: 'Гиперссылка на товар', key: 'link' },
-        { header: 'Минимальная продажная цена', key: 'minPrice' },
-        { header: 'Вес', key: 'weight' },
-        { header: 'Рейтинг', key: 'rating' },
-        { header: 'Кол-во отзывов', key: 'reviews' },
-        { header: 'Категория', key: 'category' },
-        { header: 'Дата отчета', key: 'date' }
-    ];
-    worksheet.columns.forEach(column => {
-        column.width = column.header.length + 5;
-    })
-    worksheet.getRow(1).font = { bold: true };
-    posts.forEach((e, index) => {
-        worksheet.addRow({ ...e, date: new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Asia/Almaty' }) });
-    })
-    await workbook.xlsx.writeFile(`./Reports/${name}Report${msg ? msg.chat.id : ""}.xlsx`)
+    console.log(posts)
+    try {
+        workbook = new Excel.Workbook();
+        worksheet = workbook.addWorksheet('Отчёт');
+        worksheet.columns = [
+            { header: 'Название товара', key: 'name' },
+            { header: 'Артикул товара', key: 'articul' },
+            { header: 'Примерная выручка за 14 дней', key: 'priceFor14Days' },
+            { header: 'Гиперссылка на товар', key: 'link' },
+            { header: 'Минимальная продажная цена', key: 'minPrice' },
+            { header: 'Вес', key: 'weight' },
+            { header: 'Рейтинг', key: 'rating' },
+            { header: 'Кол-во отзывов', key: 'reviews' },
+            { header: 'Категория', key: 'category' },
+            { header: 'Дата отчета', key: 'date' }
+        ];
+        worksheet.columns.forEach(column => {
+            column.width = column.header.length + 5;
+        })
+        worksheet.getRow(1).font = { bold: true };
+        posts.forEach((e, index) => {
+            worksheet.addRow({ ...e, date: new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Asia/Almaty' }) });
+        })
+        await workbook.xlsx.writeFile(`./Reports/${name}Report${msg ? msg.chat.id : ""}.xlsx`)
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 const createFileOnGoogleDrive = async (name, folder) => {
@@ -238,104 +243,6 @@ const deleteFile = async (name, id) => {
         if (err) throw err; // не удалось удалить файл
         console.log('Файл успешно удалён');
     });
-}
-
-const allParsing = async () => {
-    try {
-        if (!checkDemoFiles()) {
-            await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category");
-            await createExcel("demoCategory");
-
-            await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand");
-            await createExcel("demoBrand");
-
-            await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word");
-            await createExcel("demoWord");
-        }
-
-        await parseTop100("https://kaspi.kz/shop/c/home/all/", "category");
-        await createExcel("home");
-
-        await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category");
-        await createExcel("clothes");
-
-        await parseTop100("https://kaspi.kz/shop/c/jewelry%20and%20bijouterie/all/", "category");
-        await createExcel("jewellery");
-
-        await parseTop100("https://kaspi.kz/shop/c/car%20goods/all/", "category");
-        await createExcel("vehicles");
-
-        await parseTop100("https://kaspi.kz/shop/c/construction%20and%20repair/all/", "category");
-        await createExcel("building");
-
-        await parseTop100("https://kaspi.kz/shop/c/beauty%20care/all/", "category");
-        await createExcel("health");
-
-        await parseTop100("https://kaspi.kz/shop/c/leisure/all/", "category");
-        await createExcel("entertainment");
-
-        await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category");
-        await createExcel("sport");
-
-        await parseTop100("https://kaspi.kz/shop/c/shoes/all/", "category");
-        await createExcel("shoes");
-
-        await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category");
-        await createExcel("children");
-
-        await parseTop100("https://kaspi.kz/shop/c/fashion%20accessories/all/", "category");
-        await createExcel("trinkets");
-
-        await parseTop100("https://kaspi.kz/shop/c/pharmacy/all/", "category");
-        await createExcel("pharmacy");
-
-        await parseTop100("https://kaspi.kz/shop/c/home%20equipment/all/", "category");
-        await createExcel("technique");
-
-        await parseTop100("https://kaspi.kz/shop/c/computers/all/", "category");
-        await createExcel("computers");
-
-        await parseTop100("https://kaspi.kz/shop/c/food/all/", "category");
-        await createExcel("grocery");
-
-        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category");
-        await createExcel("gadgets");
-
-        await parseTop100("https://kaspi.kz/shop/c/tv_audio/all/", "category");
-        await createExcel("video");
-
-        await parseTop100("https://kaspi.kz/shop/c/pet%20goods/all/", "category");
-        await createExcel("animals");
-
-        await parseTop100("https://kaspi.kz/shop/c/office%20and%20school%20supplies/all/", "category");
-        await createExcel("office");
-
-        await parseTop100("https://kaspi.kz/shop/c/gifts%20and%20party%20supplies/all/", "category");
-        await createExcel("gifts");
-
-        await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B4%D0%BE+10+000+%D1%82", "price");
-        await createExcel("upTo10000");
-
-        await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A10+000+-+49+999+%D1%82", "price");
-        await createExcel("from10000to49999");
-
-        await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A50+000+-+99+999+%D1%82", "price");
-        await createExcel("from50000to99999");
-
-        await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A100+000+-+149+999+%D1%82", "price");
-        await createExcel("from100000to149999");
-
-        await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A150+000+-+199+999+%D1%82", "price");
-        await createExcel("from150000to199999");
-
-        await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A200+000+-+499+999+%D1%82", "price");
-        await createExcel("from200000to499999");
-
-        await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B1%D0%BE%D0%BB%D0%B5%D0%B5+500+000+%D1%82", "price");
-        await createExcel("moreThan500000");
-    } catch (error) {
-        console.log(error)
-    }
 }
 
 const filesSender = async (data, id) => {
@@ -446,20 +353,11 @@ bot.on("message", async (msg) => {
         user.subReqReportsTop100 -= 1;
         await user.save();
         await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
-        const resp = await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3A${msg.text}`, "brand");
+        const resp = await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3A${msg.text}`, "brand", "brand", msg);
         if (resp == -1) {
             await bot.sendMessage(msg.chat.id, "По переданному Вами бренду не найдено ни одного товара")
         } else {
-            createExcel(msg.text, msg).then(() => {
-                bot.sendDocument(msg.chat.id, `./Reports/${msg.text}Report${msg.chat.id}.xlsx`).then(() => {
-                    createFileOnGoogleDrive(`${msg.text}Report${msg.chat.id}`, "1o5HqHeqGTUZWwHa9CCbfa1jIuxKp23II").then(() => {
-                        fs.unlinkSync(`./Reports/${msg.text}Report${msg.chat.id}.xlsx`, err => {
-                            if (err) throw err; // не удалось удалить файл
-                            console.log('Файл успешно удалён');
-                        });
-                    })
-                })
-            })
+            await filesSender(msg.text, msg.chat.id);
         }
     }
     if (user.isOrderKeyWordReport) {
@@ -474,20 +372,11 @@ bot.on("message", async (msg) => {
         user.subReqReportsTop100 -= 1;
         await user.save();
         await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
-        const resp = await parseTop100(`https://kaspi.kz/shop/search/?text=${msg.text}`, "word");
+        const resp = await parseTop100(`https://kaspi.kz/shop/search/?text=${msg.text}`, "word", "word", msg);
         if (resp == -1) {
             await bot.sendMessage(msg.chat.id, "По переданному Вами бренду не найдено ни одного товара")
         } else {
-            createExcel(msg.text, msg).then(() => {
-                bot.sendDocument(msg.chat.id, `./Reports/${msg.text}Report${msg.chat.id}.xlsx`).then(() => {
-                    createFileOnGoogleDrive(`${msg.text}Report${msg.chat.id}`, "1gsqkVAzdjtLQS-jhb5eFlwnAdKg8v-12").then(() => {
-                        fs.unlinkSync(`./Reports/${msg.text}Report${msg.chat.id}.xlsx`, err => {
-                            if (err) throw err; // не удалось удалить файл
-                            console.log('Файл успешно удалён');
-                        });
-                    })
-                })
-            })
+            await filesSender(msg.text, msg.chat.id);
         }
     }
     if (RegExp.test(msg.text)) {
@@ -979,13 +868,10 @@ bot.on('callback_query', async (callbackQuery) => {
 
 (async function () {
     if (!await checkDemoFiles()) {
-        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category");
-        await createExcel("demoCategory");
+        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "category");
 
-        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand");
-        await createExcel("demoBrand");
+        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand", "brand");
 
-        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word");
-        await createExcel("demoWord");
+        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "word");
     }
 }())
