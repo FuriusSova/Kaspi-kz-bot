@@ -15,6 +15,10 @@ const keyWordText = `
 
 Просто пришлите нам ключевое слово или словосочетание, время обработки 5-10 минут
 `
+const categoryText = `
+Если вы не нашли нужную категорию, вышлите нам ссылку на неё:
+Например: https://kaspi.kz/shop/c/tvs/
+`
 const contactAdmin = "Контакты админа: @Mr_Li13"
 const buySubscription = `
 Купить подписку:
@@ -301,6 +305,7 @@ module.exports = {
     inlineKeyboardPrice : inlineKeyboardPrice,
     inlineKeyboardQuestions : inlineKeyboardQuestions,
     brandText : brandText,
+    categoryText : categoryText,
     keyWordText : keyWordText,
     contactAdmin : contactAdmin,
     answerQuest1 : answerQuest1,

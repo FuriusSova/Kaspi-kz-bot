@@ -358,7 +358,7 @@ bot.on("message", async (msg) => {
         }
     }
     const user = await User.findOne({ where: { chat_id: msg.chat.id } });
-    if(!user){
+    if (!user) {
         await User.create({
             chat_id: msg.chat.id
         })
@@ -462,8 +462,10 @@ bot.on("message", async (msg) => {
             return;
         }
 
-        user.subReqReportsTop100 -= 1;
-        await user.save();
+        if (user.subReqReportsTop100 != 0) {
+            user.subReqReportsTop100 -= 1;
+            await user.save();
+        }
         await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
         const resp = await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3A${msg.text}`, "brand", "brand", msg);
         if (resp == -1) {
@@ -485,9 +487,10 @@ bot.on("message", async (msg) => {
                 });
             return;
         }
-
-        user.subReqReportsTop100 -= 1;
-        await user.save();
+        if (user.subReqReportsTop100 != 0) {
+            user.subReqReportsTop100 -= 1;
+            await user.save();
+        }
         await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
         const resp = await parseTop100(`https://kaspi.kz/shop/search/?text=${msg.text}`, "word", "word", msg);
         if (resp == -1) {
@@ -501,12 +504,35 @@ bot.on("message", async (msg) => {
             await bot.sendMessage(msg.chat.id, "Для того чтобы воспользоваться бесплатными ссылками и отчетами, необходимо вступить в группу @top100kaspi");
             return;
         };
-        if (user.subReports > 0 || user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
+        if (msg.text.includes("kaspi.kz/shop/c/")) {
+            if (user.subReadyReportsTop100 != 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited >= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
+                const response = await parseTop100(msg.text, "category", "category");
+                if (response == -1) {
+                    await bot.sendMessage(msg.chat.id, "По переданной Вами категории не найдено ни одного товара")
+                } else {
+                    await filesSender(msg.text, msg.chat.id);
+                    if (user.subReadyReportsTop100 != 0) {
+                        user.subReadyReportsTop100 -= 1;
+                        user.save();
+                    }
+                }
+            } else {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились проверки. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
+            }
+        } else if (user.subReports > 0 || user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
             if (msg.text.includes("kaspi.kz")) {
                 await bot.sendMessage(msg.chat.id, "Запрос обрабатывается...")
                 let data = await parseUrl(msg.text);
-                user.subReports -= 1;
-                user.save();
+                if (user.subReports > 0) {
+                    user.subReports -= 1;
+                    user.save();
+                }
                 await bot.sendMessage(msg.chat.id, `
 Top100Kaspi_bot - аналитика продаж на Каспи 
 
@@ -553,7 +579,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
         }
     };
     if (msg.text == "Топ100 по категориям") {
-        await bot.sendMessage(msg.chat.id, "Выберете категорию для создания отчета:",
+        await bot.sendMessage(msg.chat.id, vars.categoryText,
             {
                 reply_markup: {
                     inline_keyboard: vars.inlineKeyboard
@@ -625,8 +651,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/furniture/all/", "category", data, msg);
@@ -642,8 +671,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/home/all/", "category", data, msg);
@@ -659,8 +691,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category", data, msg);
@@ -676,8 +711,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/jewelry%20and%20bijouterie/all/", "category", data, msg);
@@ -693,8 +731,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/car%20goods/all/", "category", data, msg);
@@ -710,8 +751,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/construction%20and%20repair/all/", "category", data, msg);
@@ -727,8 +771,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/beauty%20care/all/", "category", data, msg);
@@ -744,8 +791,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/leisure/all/", "category", data, msg);
@@ -761,8 +811,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category", data, msg);
@@ -778,8 +831,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/shoes/all/", "category", data, msg);
@@ -795,8 +851,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category", data, msg);
@@ -812,8 +871,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/fashion%20accessories/all/", "category", data, msg);
@@ -829,8 +891,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/pharmacy/all/", "category", data, msg);
@@ -846,8 +911,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/home%20equipment/all/", "category", data, msg);
@@ -863,8 +931,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/computers/all/", "category", data, msg);
@@ -880,8 +951,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/food/all/", "category", data, msg);
@@ -897,8 +971,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", data, msg);
@@ -914,8 +991,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/tv_audio/all/", "category", data, msg);
@@ -931,8 +1011,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/pet%20goods/all/", "category", data, msg);
@@ -948,8 +1031,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/office%20and%20school%20supplies/all/", "category", data, msg);
@@ -965,8 +1051,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/gifts%20and%20party%20supplies/all/", "category", data, msg);
@@ -982,8 +1071,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B4%D0%BE+10+000+%D1%82", "price", data, msg);
@@ -999,8 +1091,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A10+000+-+49+999+%D1%82", "price", data, msg);
@@ -1016,8 +1111,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A50+000+-+99+999+%D1%82", "price", data, msg);
@@ -1033,8 +1131,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A100+000+-+149+999+%D1%82", "price", data, msg);
@@ -1050,8 +1151,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A150+000+-+199+999+%D1%82", "price", data, msg);
@@ -1067,8 +1171,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A200+000+-+499+999+%D1%82", "price", data, msg);
@@ -1084,8 +1191,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
+
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B1%D0%BE%D0%BB%D0%B5%D0%B5+500+000+%D1%82", "price", data, msg);
