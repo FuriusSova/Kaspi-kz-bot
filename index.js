@@ -482,16 +482,16 @@ bot.on("message", async (msg) => {
                 });
             return;
         }
-        if (user.subReadyReportsTop100 != 0) {
-            user.subReadyReportsTop100 -= 1;
-            await user.save();
-        }
         await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
         const resp = await parseTop100(`https://kaspi.kz/shop/search/?text=${msg.text}`, "word", "word", msg);
         if (resp == -1) {
-            await bot.sendMessage(msg.chat.id, "По переданному Вами бренду не найдено ни одного товара")
+            await bot.sendMessage(msg.chat.id, "По переданному Вами ключевому слову не найдено ни одного товара")
         } else {
             await filesSender(msg.text, msg.chat.id);
+            if (user.subReadyReportsTop100 != 0) {
+                user.subReadyReportsTop100 -= 1;
+                await user.save();
+            }
         }
     }
     if (RegExp.test(msg.text)) {
