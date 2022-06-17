@@ -177,7 +177,6 @@ let workbook;
 let worksheet;
 
 const createExcel = async (name, msg, posts) => {
-    console.log(posts)
     try {
         workbook = new Excel.Workbook();
         worksheet = workbook.addWorksheet('Отчёт');
@@ -254,9 +253,9 @@ const filesSender = async (data, id) => {
 
 const showBalance = async (text, user) => {
     return {
-        linksReports: (typeof text) == "number" ? user.subReports : text + " подписка",
-        top100Ready: (typeof text) == "number" ? user.subReadyReportsTop100 : text + " подписка",
-        top100Req: user.subReqReportsTop100
+        linksReports: (typeof text) == "number" ? user.subReports : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`,
+        top100Ready: (typeof text) == "number" ? user.subReadyReportsTop100 : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`,
+        top100Req: (typeof text) == "number" ? user.subReqReportsTop100 : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`
     }
 }
 
@@ -543,7 +542,8 @@ Top100Kaspi_bot - аналитика продаж на Каспи
         };
 
         if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
-            await bot.sendMessage(msg.chat.id, `Подписка действует до: ${user.subReportsIfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' })}`);
+            const text = user.subReportsIfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' });
+            await bot.sendMessage(msg.chat.id, `Подписка действует до: ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`);
         } else {
             if (user.subReports == 0) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились проверки. Оплатите за проверки для работы с ботом.")
@@ -553,7 +553,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
         }
     };
     if (msg.text == "Топ100 по категориям") {
-        await bot.sendMessage(msg.chat.id, "Выберете категорию:",
+        await bot.sendMessage(msg.chat.id, "Выберете категорию для создания отчета:",
             {
                 reply_markup: {
                     inline_keyboard: vars.inlineKeyboard
@@ -1133,6 +1133,7 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 });
 
+/*
 (async function () {
     if (!await checkDemoFiles()) {
         await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "demoCategory");
@@ -1142,3 +1143,4 @@ bot.on('callback_query', async (callbackQuery) => {
         await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "demoWord");
     }
 }())
+*/
