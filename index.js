@@ -6,6 +6,7 @@ const User = require("./db/userModel");
 const Excel = require('exceljs');
 const path = require('path');
 const fs = require("fs");
+const pdf = require('pdf-parse');
 
 const puppeteer = require('puppeteer');
 const chr = require("cheerio")
@@ -259,6 +260,84 @@ const showBalance = async (text, user) => {
     }
 }
 
+const checkCode = async (msg) => {
+    try {
+        User.findOne({ where: { chat_id: msg.chat.id } }).then(async (user) => {
+            bot.downloadFile(msg.document.file_id, `./receipts`).then(async (data) => {
+                fs.rename(`./${data}`, `./receipts/receipt${msg.chat.id}.pdf`, err => {
+                    if (err) throw err;
+                    pdf(`./receipts/receipt${msg.chat.id}.pdf`).then(async (data) => {
+                        const arrCodes = JSON.parse(fs.readFileSync('./receiptId/codes.json'));
+                        const code = data.text.slice(data.text.indexOf("Номер чека:") + 11, data.text.indexOf("\nОтправитель"))
+                        const price = +data.text.slice(data.text.indexOf("Сумма:") + 6, data.text.indexOf("тг")-1).replace(/\s/g, '')
+                        const date = data.text.slice(data.text.indexOf("Дата/Время:") + 11, data.text.indexOf("\nКод эмиссии"))
+                        const month = new Date(+date.slice(6, 10), +date.slice(3, 5) - 1, +date.slice(0, 2)).getMonth();
+                        const day = new Date(+date.slice(6, 10), +date.slice(3, 5) - 1, +date.slice(0, 2)).getDay();
+                        const year = new Date(+date.slice(6, 10), +date.slice(3, 5) - 1, +date.slice(0, 2)).getFullYear();
+
+                        let flag = true;
+
+                        for (let i = 0; i < arrCodes.length; i++) {
+                            const element = arrCodes[i];
+                            if (element.codeId == code) {
+                                flag = false;
+                                break
+                            }
+                        }
+
+                        if (flag && new Date(Date.now()).getMonth() == month && new Date(Date.now()).getDay() == day && new Date(Date.now()).getFullYear() == year) {
+                            arrCodes.push({
+                                codeId: code
+                            })
+                            fs.writeFileSync('./receiptId/codes.json', `${JSON.stringify(arrCodes)}`);
+
+                            if (price == 1490) {
+                                user.subReports += 5;
+                                await user.save();
+                                await bot.sendMessage(msg.chat.id, "Начислено 5 проверок");
+                            } else if (price == 2490) {
+                                user.subReports += 10;
+                                await user.save();
+                                await bot.sendMessage(msg.chat.id, "Начислено 10 проверок");
+                            } else if (price == 5990) {
+                                user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
+                                await user.save();
+                                await bot.sendMessage(msg.chat.id, "Начислен безлимит на месяц (проверки)");
+                            } else if (price == 2990) {
+                                user.subReqReportsTop100 += 1;
+                                await user.save();
+                                await bot.sendMessage(msg.chat.id, "Начислено 1шт Топ100 отчетов");
+                            } else if (price == 9990) {
+                                user.subReqReportsTop100 += 5;
+                                await user.save();
+                                await bot.sendMessage(msg.chat.id, "Начислено 5шт Топ100 отчетов");
+                            } else if (price == 29990) {
+                                user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
+                                user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
+                                await user.save();
+                                await bot.sendMessage(msg.chat.id, "Начислен безлимит на отчёты и проверки (1 месяц)");
+                            }
+                        } else {
+                            if (!flag) await bot.sendMessage(msg.chat.id, "Чек с таким номером уже существует")
+                            else if (new Date(Date.now()).getMonth() !== month || new Date(Date.now()).getDay() !== day || new Date(Date.now()).getFullYear() !== year) await bot.sendMessage(msg.chat.id, "Дата чека не совпадает с сегодняшней");
+                        }
+
+                        fs.unlinkSync(`./receipts/receipt${msg.chat.id}.pdf`, (err) => {
+                            if (err) console.log(err);
+                        })
+                    }).catch((err) => console.log((err)))
+                })
+            })
+        })
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+bot.on("document", async (msg) => {
+    await checkCode(msg)
+})
+
 bot.on("message", async (msg) => {
     if (msg.text == "/start") {
         await bot.sendMessage(msg.chat.id, vars.greatingText, {
@@ -282,9 +361,13 @@ bot.on("message", async (msg) => {
     const user = await User.findOne({ where: { chat_id: msg.chat.id } });
     /////////////////////////////////////////////////////// TEST
     if (msg.text == "/test") {
+        /*
         user.subReports += 5;
         user.subReqReportsTop100 += 5;
         user.subReadyReportsTop100 += 5;
+`       */
+        user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
+        user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
         user.save();
     }
     /////////////////////////////////////////////////////// TEST
@@ -316,7 +399,12 @@ bot.on("message", async (msg) => {
 Кол-во ссылок - ${resp.linksReports}
 Кол-во ТОП100 готовых отчетов - ${resp.top100Ready}
 Кол-во ТОП100 отчетов по запросу - ${resp.top100Req}
-            `);
+            `,
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    });
             } else {
                 resp = await showBalance(user.subReports, user);
                 await bot.sendMessage(msg.chat.id, `
@@ -328,7 +416,13 @@ bot.on("message", async (msg) => {
         }
     }
     if (msg.text == "/buySubscription") {
-        await bot.sendMessage(msg.chat.id, vars.contactAdmin);
+        await bot.sendMessage(msg.chat.id, vars.buySubscription,
+            {
+                reply_markup: {
+                    inline_keyboard: vars.inlineKeyboardSubscription
+                }
+            }
+        );
     }
     if (msg.text == "/declineSubscription") {
         if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
@@ -338,15 +432,25 @@ bot.on("message", async (msg) => {
             await user.save();
             await bot.sendMessage(msg.chat.id, "Подписка успешно отменена");
         } else {
-            await bot.sendMessage(msg.chat.id, "Ваша подписка уже недействительна")
+            await bot.sendMessage(msg.chat.id, "Ваша подписка уже недействительна",
+                {
+                    reply_markup: {
+                        inline_keyboard: vars.inlineKeyboardSubscription
+                    }
+                })
         }
     }
     if (user.isOrderBrandReport) {
         user.isOrderBrandReport = false;
         await user.save();
 
-        if (user.subReqReportsTop100 == 0) {
-            await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.");
+        if (user.subReqReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+            await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
+                {
+                    reply_markup: {
+                        inline_keyboard: vars.inlineKeyboardSubscription
+                    }
+                });
             return;
         }
 
@@ -364,8 +468,13 @@ bot.on("message", async (msg) => {
         user.isOrderKeyWordReport = false;
         await user.save();
 
-        if (user.subReqReportsTop100 == 0) {
-            await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.");
+        if (user.subReqReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+            await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
+                {
+                    reply_markup: {
+                        inline_keyboard: vars.inlineKeyboardSubscription
+                    }
+                });
             return;
         }
 
@@ -384,7 +493,7 @@ bot.on("message", async (msg) => {
             await bot.sendMessage(msg.chat.id, "Для того чтобы воспользоваться бесплатными ссылками и отчетами, необходимо вступить в группу @top100kaspi");
             return;
         };
-        if (user.subReports > 0) {
+        if (user.subReports > 0 || user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
             if (msg.text.includes("kaspi.kz")) {
                 await bot.sendMessage(msg.chat.id, "Запрос обрабатывается...")
                 let data = await parseUrl(msg.text);
@@ -410,7 +519,12 @@ Top100Kaspi_bot - аналитика продаж на Каспи
                 bot.sendMessage(msg.chat.id, "Неверная ссылка")
             }
         } else {
-            await bot.sendMessage(msg.chat.id, "У Вас закончились проверки. Оплатите за проверки для работы с ботом.")
+            await bot.sendMessage(msg.chat.id, "У Вас закончились проверки. Оплатите за проверки для работы с ботом.",
+                {
+                    reply_markup: {
+                        inline_keyboard: vars.inlineKeyboardSubscription
+                    }
+                })
         }
     }
     if (msg.text == "Проверка ссылок") {
@@ -418,7 +532,6 @@ Top100Kaspi_bot - аналитика продаж на Каспи
             await bot.sendMessage(msg.chat.id, "Для того чтобы воспользоваться бесплатными ссылками и отчетами, необходимо вступить в группу @top100kaspi");
             return;
         };
-        //user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));   ДЛЯ БЕЗЛИМ ПОДПИСКИ
 
         if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
             await bot.sendMessage(msg.chat.id, `Подписка действует до: ${user.subReportsIfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' })}`);
@@ -493,8 +606,13 @@ bot.on('callback_query', async (callbackQuery) => {
 
     try {
         if (data == "furniture") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -505,8 +623,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/furniture/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "home") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -517,8 +640,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/home/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "clothes") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -529,8 +657,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "jewellery") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -541,8 +674,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/jewelry%20and%20bijouterie/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "vehicle") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -553,8 +691,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/car%20goods/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "building") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -565,8 +708,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/construction%20and%20repair/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "health") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -577,8 +725,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/beauty%20care/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "entertainment") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -589,8 +742,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/leisure/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "sport") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -601,8 +759,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "shoes") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -613,8 +776,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/shoes/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "children") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -625,8 +793,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "trinkets") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -637,8 +810,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/fashion%20accessories/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "pharmacy") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -649,8 +827,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/pharmacy/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "technique") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -661,8 +844,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/home%20equipment/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "computers") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -673,8 +861,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/computers/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "grocery") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -685,8 +878,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/food/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "gadgets") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -697,8 +895,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "video") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -709,8 +912,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/tv_audio/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "animals") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -721,8 +929,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/pet%20goods/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "office") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -733,8 +946,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/office%20and%20school%20supplies/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "gifts") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -745,8 +963,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/gifts%20and%20party%20supplies/all/", "category", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "upTo10000") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -757,8 +980,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B4%D0%BE+10+000+%D1%82", "price", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "from10000to49999") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -769,8 +997,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A10+000+-+49+999+%D1%82", "price", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "from50000to99999") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -781,8 +1014,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A50+000+-+99+999+%D1%82", "price", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "from100000to149999") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -793,8 +1031,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A100+000+-+149+999+%D1%82", "price", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "from150000to199999") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -805,8 +1048,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A150+000+-+199+999+%D1%82", "price", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "from200000to499999") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -817,8 +1065,13 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A200+000+-+499+999+%D1%82", "price", data, msg);
             await filesSender(data, msg.chat.id)
         } else if (data == "moreThan500000") {
-            if (user.subReadyReportsTop100 == 0) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.");
+            if (user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited || user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+                    {
+                        reply_markup: {
+                            inline_keyboard: vars.inlineKeyboardSubscription
+                        }
+                    })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
@@ -859,6 +1112,11 @@ bot.on('callback_query', async (callbackQuery) => {
         } else if (data == "quest6") {
             await bot.sendMessage(msg.chat.id, vars.answerQuest6)
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
+        } else if (data == "chechPay") {
+            //user.subscriptionChoosed = true;
+            //await user.save();
+            await bot.sendMessage(msg.chat.id, "Вышлите пожалуйста квитанцию об оплате боту на проверку")
+            await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         }
     } catch (error) {
         console.log(error)
@@ -868,10 +1126,10 @@ bot.on('callback_query', async (callbackQuery) => {
 
 (async function () {
     if (!await checkDemoFiles()) {
-        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "category");
+        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "demoCategory");
 
-        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand", "brand");
+        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand", "demoBrand");
 
-        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "word");
+        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "demoWord");
     }
 }())

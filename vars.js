@@ -14,6 +14,16 @@ const keyWordText = `Хотите расширить ассортимент и �
 С помощью бота вы сможете узнать примерное количество продаж и выручку товара за последние 14 дней по нужному ключевому слову.
 Чтобы попробовать просто пришлите нам любое слово или словосочетание, время обработки 5-10 минут`
 const contactAdmin = "Контакты админа: @Mr_Li13"
+const buySubscription = `
+Купить подписку:
+
+ • 5 проверок - 1490 тг
+ • 10 проверок - 2490 тг
+ • Безлимит на проверки (1 месяц) - 5990 тг
+ • 1шт Топ100 отчетов -  2990тг. (любой отчет из Топ100)
+ • 5шт Топ100 отчетов - 9990тг. (любой отчет из Топ100)
+ • Безлимит на отчёты и проверки (1 месяц - 29990тг. (Любые топ100 отчеты и проверки ссылок)
+`
 const inlineKeyboard = [
     [
         {
@@ -207,6 +217,57 @@ const inlineKeyboardQuestions = [
     ]
 ]
 
+const inlineKeyboardSubscription = [
+    [
+        {
+            text: "5 проверок - 1490 тг",
+            callback_data : "check5",
+            url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=1490"
+        }
+    ],
+    [
+        {
+            text: '10 проверок - 2490 тг',
+            callback_data : "check10",
+            url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=2490"
+        }
+    ],
+    [
+        {
+            text: 'Безлимит на месяц (проверки) - 5990т',
+            callback_data : "checkUnlimited",
+            url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=5990"
+        }
+    ],
+    [
+        {
+            text: "1шт Топ100 отчетов -  2990тг. (любой отчет из Топ100)",
+            callback_data : "top100buy1",
+            url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=2990"
+        }
+    ],
+    [
+        {
+            text: "5шт Топ100 отчетов - 9990тг. (любой отчет из Топ100)",
+            callback_data : "top100buy5",
+            url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=9990"
+        }
+    ],
+    [
+        {
+            text: "Безлимит на отчёты и проверки - 29990т",
+            callback_data : "allUnlimited",
+            url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=29990"
+        }
+    ],
+    [
+        {
+            text: "Проверить оплату",
+            callback_data : "chechPay"
+        }
+    ]
+]
+
 const answerQuest1 = `
 "Насколько точную информацию предоставляет бот?
 
@@ -245,5 +306,7 @@ module.exports = {
     answerQuest3 : answerQuest3,
     answerQuest4 : answerQuest4,
     answerQuest5 : answerQuest5,
-    answerQuest6 : answerQuest6
+    answerQuest6 : answerQuest6,
+    buySubscription : buySubscription,
+    inlineKeyboardSubscription : inlineKeyboardSubscription
 };
