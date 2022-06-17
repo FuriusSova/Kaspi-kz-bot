@@ -359,6 +359,11 @@ bot.on("message", async (msg) => {
         }
     }
     const user = await User.findOne({ where: { chat_id: msg.chat.id } });
+    if(!user){
+        await User.create({
+            chat_id: msg.chat.id
+        })
+    }
     /////////////////////////////////////////////////////// TEST
     if (msg.text == "/test") {
         /*
