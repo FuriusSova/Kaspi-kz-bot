@@ -579,13 +579,14 @@ Top100Kaspi_bot - аналитика продаж на Каспи
         }
     };
     if (msg.text == "Топ100 по категориям") {
-        await bot.sendMessage(msg.chat.id, vars.categoryText,
+        await bot.sendMessage(msg.chat.id, "Выберете категорию для создания отчета:",
             {
                 reply_markup: {
                     inline_keyboard: vars.inlineKeyboard
                 }
             }
         );
+        await bot.sendMessage(msg.chat.id, vars.categoryText)
     };
     if (msg.text == "Топ100 по брендам") {
         bot.sendMessage(msg.chat.id, vars.brandText,
