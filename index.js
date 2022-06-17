@@ -269,7 +269,7 @@ const checkCode = async (msg) => {
                     pdf(`./receipts/receipt${msg.chat.id}.pdf`).then(async (data) => {
                         const arrCodes = JSON.parse(fs.readFileSync('./receiptId/codes.json'));
                         const code = data.text.slice(data.text.indexOf("Номер чека:") + 11, data.text.indexOf("\nОтправитель"))
-                        const price = +data.text.slice(data.text.indexOf("Сумма:") + 6, data.text.indexOf("тг")-1).replace(/\s/g, '')
+                        const price = +data.text.slice(data.text.indexOf("Сумма:") + 6, data.text.indexOf("тг") - 1).replace(/\s/g, '')
                         const date = data.text.slice(data.text.indexOf("Дата/Время:") + 11, data.text.indexOf("\nКод эмиссии"))
                         const month = new Date(+date.slice(6, 10), +date.slice(3, 5) - 1, +date.slice(0, 2)).getMonth();
                         const day = new Date(+date.slice(6, 10), +date.slice(3, 5) - 1, +date.slice(0, 2)).getDay();
@@ -380,7 +380,7 @@ bot.on("message", async (msg) => {
             }
         );
     }
-    if (msg.text == "/contactAdmin") {
+    if (msg.text == "/contactadmin") {
         await bot.sendMessage(msg.chat.id, vars.contactAdmin);
     }
     if (msg.text == "/balance") {
@@ -415,7 +415,7 @@ bot.on("message", async (msg) => {
             }
         }
     }
-    if (msg.text == "/buySubscription") {
+    if (msg.text == "/buysubscription") {
         await bot.sendMessage(msg.chat.id, vars.buySubscription,
             {
                 reply_markup: {
@@ -424,12 +424,15 @@ bot.on("message", async (msg) => {
             }
         );
     }
-    if (msg.text == "/declineSubscription") {
+    if (msg.text == "/declinesubscription") {
+        user.subReports = 0;
+        user.subReadyReportsTop100 = 0;
+        user.subReqReportsTop100 = 0;
         if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
-            user.subReports = 0;
             user.subReportsIfUnlimited = null;
-            user.subReadyReportsTop100 = 0;
-            await user.save();
+            await bot.sendMessage(msg.chat.id, "Подписка успешно отменена");
+        } else if (user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited >= new Date(Date.now())) {
+            user.subReportsTop100IfUnlimited = null
             await bot.sendMessage(msg.chat.id, "Подписка успешно отменена");
         } else {
             await bot.sendMessage(msg.chat.id, "Ваша подписка уже недействительна",
@@ -439,6 +442,7 @@ bot.on("message", async (msg) => {
                     }
                 })
         }
+        await user.save();
     }
     if (user.isOrderBrandReport) {
         user.isOrderBrandReport = false;
