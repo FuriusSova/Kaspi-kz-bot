@@ -254,8 +254,7 @@ const filesSender = async (data, id) => {
 const showBalance = async (text, user) => {
     return {
         linksReports: (typeof text) == "number" ? user.subReports : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`,
-        top100Ready: (typeof text) == "number" ? user.subReadyReportsTop100 : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`,
-        top100Req: (typeof text) == "number" ? user.subReqReportsTop100 : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`
+        top100Ready: (typeof text) == "number" ? user.subReadyReportsTop100 : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`
     }
 }
 
@@ -303,11 +302,11 @@ const checkCode = async (msg) => {
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Начислен безлимит на месяц (проверки)");
                             } else if (price == 2990) {
-                                user.subReqReportsTop100 += 1;
+                                user.subReadyReportsTop100 += 1;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Начислено 1шт Топ100 отчетов");
                             } else if (price == 9990) {
-                                user.subReqReportsTop100 += 5;
+                                user.subReadyReportsTop100 += 5;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Начислено 5шт Топ100 отчетов");
                             } else if (price == 29990) {
@@ -365,13 +364,13 @@ bot.on("message", async (msg) => {
     }
     /////////////////////////////////////////////////////// TEST
     if (msg.text == "/test") {
-        /*
-        user.subReports += 5;
-        user.subReqReportsTop100 += 5;
-        user.subReadyReportsTop100 += 5;
-`       */
         user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
         user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
+        user.save();
+    }
+    if (msg.text == "/test2") {
+        user.subReports = 5;
+        user.subReadyReportsTop100 = 5;
         user.save();
     }
     /////////////////////////////////////////////////////// TEST
@@ -393,16 +392,14 @@ bot.on("message", async (msg) => {
             resp = await showBalance(`${user.subReportsIfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' })}`, user)
             await bot.sendMessage(msg.chat.id, `
 Кол-во ссылок - ${resp.linksReports}
-Кол-во ТОП100 готовых отчетов - ${resp.top100Ready}
-Кол-во ТОП100 отчетов по запросу - ${resp.top100Req}
+Кол-во ТОП100 отчетов - ${resp.top100Ready}
             `);
         } else {
             if (user.subReports == 0) {
-                resp = await showBalance("У Вас закончилась проверки. Оплатите за проверки для работы с ботом.", user);
+                resp = await showBalance(user.subReports, user);
                 await bot.sendMessage(msg.chat.id, `
 Кол-во ссылок - ${resp.linksReports}
 Кол-во ТОП100 готовых отчетов - ${resp.top100Ready}
-Кол-во ТОП100 отчетов по запросу - ${resp.top100Req}
             `,
                     {
                         reply_markup: {
@@ -414,7 +411,6 @@ bot.on("message", async (msg) => {
                 await bot.sendMessage(msg.chat.id, `
 Кол-во ссылок - ${resp.linksReports}
 Кол-во ТОП100 готовых отчетов - ${resp.top100Ready}
-Кол-во ТОП100 отчетов по запросу - ${resp.top100Req}
             `);
             }
         }
@@ -431,7 +427,6 @@ bot.on("message", async (msg) => {
     if (msg.text == "/declinesubscription") {
         user.subReports = 0;
         user.subReadyReportsTop100 = 0;
-        user.subReqReportsTop100 = 0;
         if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
             user.subReportsIfUnlimited = null;
             await bot.sendMessage(msg.chat.id, "Подписка успешно отменена");
@@ -452,7 +447,7 @@ bot.on("message", async (msg) => {
         user.isOrderBrandReport = false;
         await user.save();
 
-        if (user.subReqReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+        if (user.subReadyReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
                     reply_markup: {
@@ -462,8 +457,8 @@ bot.on("message", async (msg) => {
             return;
         }
 
-        if (user.subReqReportsTop100 != 0) {
-            user.subReqReportsTop100 -= 1;
+        if (user.subReadyReportsTop100 != 0) {
+            user.subReadyReportsTop100 -= 1;
             await user.save();
         }
         await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
@@ -478,7 +473,7 @@ bot.on("message", async (msg) => {
         user.isOrderKeyWordReport = false;
         await user.save();
 
-        if (user.subReqReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+        if (user.subReadyReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
                     reply_markup: {
@@ -487,8 +482,8 @@ bot.on("message", async (msg) => {
                 });
             return;
         }
-        if (user.subReqReportsTop100 != 0) {
-            user.subReqReportsTop100 -= 1;
+        if (user.subReadyReportsTop100 != 0) {
+            user.subReadyReportsTop100 -= 1;
             await user.save();
         }
         await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (5-10 минут)")
