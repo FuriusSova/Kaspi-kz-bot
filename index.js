@@ -235,7 +235,7 @@ const createExcel = async (name, msg, posts, repData) => {
             worksheet.addRow({ ...e });
             if(index >= 4) worksheet.getCell(`A${index}`).font = { bold: true };
         })
-        await workbook.xlsx.writeFile(`./Reports/top100kaspi_bot-${name}Report_${day+month+year}.xlsx`)
+        await workbook.xlsx.writeFile(`./Reports/top100kaspi_bot-${name}Report_${name == "demoCategory" || name == "demoBrand" || name == "demoWord" ? "" : day+month+year}.xlsx`)
     } catch (error) {
         console.log(error)
     }
@@ -467,25 +467,6 @@ bot.on("message", async (msg) => {
                 }
             }
         );
-    }
-    if (msg.text == "/declinesubscription") {
-        user.subReports = 0;
-        user.subReadyReportsTop100 = 0;
-        if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
-            user.subReportsIfUnlimited = null;
-            await bot.sendMessage(msg.chat.id, "Подписка успешно отменена");
-        } else if (user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited >= new Date(Date.now())) {
-            user.subReportsTop100IfUnlimited = null
-            await bot.sendMessage(msg.chat.id, "Подписка успешно отменена");
-        } else {
-            await bot.sendMessage(msg.chat.id, "Ваша подписка уже недействительна",
-                {
-                    reply_markup: {
-                        inline_keyboard: vars.inlineKeyboardSubscription
-                    }
-                })
-        }
-        await user.save();
     }
     if (user.isOrderBrandReport && msg.text.indexOf("/") == -1) {
         user.isOrderBrandReport = false;
@@ -1180,17 +1161,17 @@ bot.on('callback_query', async (callbackQuery) => {
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B1%D0%BE%D0%BB%D0%B5%D0%B5+500+000+%D1%82", "price", data, msg, {rep : "цене", repReq : "более 500 000 т"});
             await filesSender(data, msg.chat.id)
         } else if (data == "demoCategory") {
-            await bot.sendDocument(msg.chat.id, "./Reports/demoCategoryReport.xlsx");
+            await bot.sendDocument(msg.chat.id, "./Reports/top100kaspi_bot-demoCategoryReport_.xlsx");
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         } else if (data == "demoBrand") {
             user.isOrderBrandReport = false;
             await user.save();
-            await bot.sendDocument(msg.chat.id, "./Reports/demoBrandReport.xlsx");
+            await bot.sendDocument(msg.chat.id, "./Reports/top100kaspi_bot-demoBrandReport_.xlsx");
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         } else if (data == "demoWord") {
             user.isOrderKeyWordReport = false;
             await user.save();
-            await bot.sendDocument(msg.chat.id, "./Reports/demoWordReport.xlsx");
+            await bot.sendDocument(msg.chat.id, "./Reports/top100kaspi_bot-demoWordReport_.xlsx");
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         } else if (data == "quest1") {
             await bot.sendMessage(msg.chat.id, vars.answerQuest1)
