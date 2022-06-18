@@ -247,14 +247,14 @@ const inlineKeyboardSubscription = [
     ],
     [
         {
-            text: "1 отчёт (любой отчёт из Top100) - 2990тг",
+            text: "1 отчёт (любой отчёт) - 2990тг",
             callback_data : "top100buy1",
             url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=2990"
         }
     ],
     [
         {
-            text: "5 отчётов (любой отчёт из Top100) - 9990тг",
+            text: "5 отчётов (любой отчёт) - 9990тг",
             callback_data : "top100buy5",
             url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=9990"
         }
