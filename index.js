@@ -95,13 +95,13 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
         } else if (flag == "brand" || flag == "price" || flag == "word") {
             sign = "&"
         }
-        /* 
+        
         $ = await getHTML(`${url}${sign}page=1`);
         if (!$(".item-card__name-link").attr('href')) return -1;
         $(".item-card__name-link").each(async function (index, elem) {
             arrOfLinks.push($(this).attr('href'));
         });
-        */
+         /*
         for (let i = 1; i <= 9; i++) {
             console.log(`${url}${sign}page=${i}`);
             $ = await getHTML(`${url}${sign}page=${i}`);
@@ -116,7 +116,7 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
                 }
             });
         }
-
+*/
         console.log(arrOfLinks);
         for (const element of arrOfLinks) {
             console.log(element)
@@ -229,11 +229,9 @@ const createExcel = async (name, msg, posts, repData) => {
             else column.width = worksheet.getRow(3).values[i].length + 5;
         })
         worksheet.getRow(3).font = { bold: true };
-        worksheet.getColumn(3).numFmt = '#,##0.00;[Red]\-#,##0.00';
-        worksheet.getColumn(5).numFmt = '#,##0.00;[Red]\-#,##0.00';
+        worksheet.getColumn(3).numFmt = '#,###'; // '_("$"* #,##0.00_);_("$"* (#,##0.00);_("$"* "-"??_);_(@_)'
         posts.forEach((e, index) => {
             worksheet.addRow({ ...e });
-            if(index >= 4) worksheet.getCell(`A${index}`).font = { bold: true };
         })
         await workbook.xlsx.writeFile(`./Reports/top100kaspi_bot-${name}Report_${name == "demoCategory" || name == "demoBrand" || name == "demoWord" ? "" : day+month+year}.xlsx`)
     } catch (error) {
@@ -481,7 +479,7 @@ bot.on("message", async (msg) => {
                 });
             return;
         }
-        await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
+        await bot.sendMessage(msg.chat.id, `Отчёт по бренду «${msg.text}» формируется, пожалуйста подождите (10-15 минут)`)
         const resp = await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3A${msg.text}`, "brand", msg.text, msg, {rep : "бренду", repReq : msg.text});
         if (resp == -1) {
             await bot.sendMessage(msg.chat.id, "По переданному Вами бренду не найдено ни одного товара")
@@ -522,7 +520,7 @@ bot.on("message", async (msg) => {
         if (msg.text.includes("kaspi.kz/shop/c/")) {
             if (user.subReadyReportsTop100 != 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited >= new Date(Date.now())) {
                 await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-                const response = await parseTop100(msg.text, "category", msg.text, msg, {rep : "категории", repReq : msg.text});
+                const response = await parseTop100(msg.text, "category", "link", msg, {rep : "категории", repReq : msg.text});
                 if (response == -1) {
                     await bot.sendMessage(msg.chat.id, "По переданной Вами категории не найдено ни одного товара")
                 } else {
@@ -1201,6 +1199,7 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 });
 
+/*
 (async function () {
     if (!await checkDemoFiles()) {
         await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "demoCategory", undefined, {rep : "категории", repReq : "Телефоны и гаджеты"});
@@ -1209,4 +1208,4 @@ bot.on('callback_query', async (callbackQuery) => {
 
         await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "demoWord", undefined, {rep : "ключевому слову", repReq : "смартфон"});
     }
-}())
+}())*/
