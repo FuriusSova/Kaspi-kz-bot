@@ -43,6 +43,7 @@ const PAGE_PUPPETEER_OPTS = {
 const getHTML = async (url) => {
     const browser = await puppeteer.launch(LAUNCH_PUPPETEER_OPTS);
     const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(0); 
     await page.goto(url, PAGE_PUPPETEER_OPTS);
     const content = await page.content();
     await page.close(); // MB UBRAT
@@ -54,6 +55,12 @@ const parseUrl = async (url) => {
     try {
         $ = await getHTML(url);
         let data = {};
+
+        const date = new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Asia/Almaty' }).slice(0, 10);
+        const month = date.slice(3, 5);
+        const day = date.slice(0,2);
+        const year = date.slice(6, 10);
+
         const dataScript = ($("#offers-list").children()[0].children[0].data).slice(($("#offers-list").children()[0].children[0].data).indexOf("Orders"));
         const sellsFor14Days = Number(dataScript.slice(dataScript.indexOf("=") + 1, dataScript.indexOf(";")));
         const priceStr = ($("tbody tr")[0].children[3].children[0].children[0].data).slice(0, ($("tbody tr")[0].children[3].children[0].children[0].data).indexOf("₸") - 1);
@@ -61,6 +68,7 @@ const parseUrl = async (url) => {
         const reviews = $(".item__rating-link span").text().slice($(".item__rating-link span").text().indexOf("(") + 1, $(".item__rating-link span").text().indexOf(")"));
         const rating = ($("span.rating").attr("class").slice($("span.rating").attr("class").indexOf("_") + 1)) / 2;
         let category;
+        let todayDate = `${day}.${month}.${year}`;
 
         $('span[itemprop="name"]').each(async function (i, elem) {
             if (i == $('span[itemprop="name"]').length - 1) {
@@ -73,6 +81,7 @@ const parseUrl = async (url) => {
         data.reviews = reviews;
         data.category = category;
         data.rating = rating;
+        data.date = todayDate;
 
         return data;
     } catch (error) {
@@ -279,17 +288,22 @@ const deleteFile = async (name, date) => {
     });
 }
 
-const filesSender = async (data, id) => {
+const filesSender = async (data, id, folder) => {
     try {
+        const user = await User.findOne({ where: { chat_id: id } });
         const date = new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Asia/Almaty' }).slice(0, 10);
         const month = date.slice(3, 5);
         const day = date.slice(0,2);
         const year = date.slice(6, 10);
         await bot.sendDocument(id, `./Reports/top100kaspi_bot-${data}Report_${day+month+year}.xlsx`)
-        await createFileOnGoogleDrive(`top100kaspi_bot-${data}Report_${day+month+year}`, "1QCMk2iZtNJrH_1ufGSzKjtiSdvytf-0M");
+        await createFileOnGoogleDrive(`top100kaspi_bot-${data}Report_${day+month+year}`, folder);
         await deleteFile(data, day+month+year)
+        user.isOrderReport = false;
+        await user.save();
     } catch (error) {
         console.log(error)
+        user.isOrderReport = false;
+        await user.save();
     }
 }
 
@@ -466,10 +480,7 @@ bot.on("message", async (msg) => {
             }
         );
     }
-    if (user.isOrderBrandReport && msg.text.indexOf("/") == -1) {
-        user.isOrderBrandReport = false;
-        await user.save();
-
+    if (user.isOrderBrandReport && !user.isOrderReport && msg.text.indexOf("/") == -1 && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
         if (user.subReadyReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
@@ -480,19 +491,24 @@ bot.on("message", async (msg) => {
             return;
         }
         await bot.sendMessage(msg.chat.id, `Отчёт по бренду «${msg.text}» формируется, пожалуйста подождите (10-15 минут)`)
+        user.isOrderBrandReport = false;
+        user.isOrderKeyWordReport = false;
+        user.isOrderReport = true;
+        await user.save();
         const resp = await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3A${msg.text}`, "brand", msg.text, msg, {rep : "бренду", repReq : msg.text});
         if (resp == -1) {
             await bot.sendMessage(msg.chat.id, "По переданному Вами бренду не найдено ни одного товара")
         } else {
-            await filesSender(msg.text, msg.chat.id);
+            await filesSender(msg.text, msg.chat.id, vars.folderForBrand);
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
         }
+    } else if (user.isOrderBrandReport && !user.isOrderReport && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
+        await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите")
+        return;
     }
-    if (user.isOrderKeyWordReport && msg.text.indexOf("/") == -1) {
-        user.isOrderKeyWordReport = false;
-        await user.save();
-
+    if (user.isOrderKeyWordReport && !user.isOrderReport && msg.text.indexOf("/") == -1 && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
         if (user.subReadyReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
@@ -503,14 +519,21 @@ bot.on("message", async (msg) => {
             return;
         }
         await bot.sendMessage(msg.chat.id, `Отчёт по ключевому слову «${msg.text}» формируется, пожалуйста подождите (10-15 минут)`)
+        user.isOrderBrandReport = false;
+        user.isOrderKeyWordReport = false;
+        user.isOrderReport = true;
+        await user.save();
         const resp = await parseTop100(`https://kaspi.kz/shop/search/?text=${msg.text}`, "word", msg.text, msg, {rep : "ключевому слову", repReq : msg.text});
         if (resp == -1) {
             await bot.sendMessage(msg.chat.id, "По переданному Вами ключевому слову не найдено ни одного товара")
         } else {
-            await filesSender(msg.text, msg.chat.id);
+            await filesSender(msg.text, msg.chat.id, vars.folderForKeyWord);
             user.subReadyReportsTop100 -= 1;
             await user.save();
         }
+    } else if (user.isOrderKeyWordReport && !user.isOrderReport && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
+        await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите")
+        return;
     }
     if (RegExp.test(msg.text)) {
         if (!await checkMember(msg, msg.chat.id)) {
@@ -518,13 +541,19 @@ bot.on("message", async (msg) => {
             return;
         };
         if (msg.text.includes("kaspi.kz/shop/c/")) {
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
             if (user.subReadyReportsTop100 != 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited >= new Date(Date.now())) {
                 await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
+                user.isOrderReport = true;
+                await user.save();
                 const response = await parseTop100(msg.text, "category", "link", msg, {rep : "категории", repReq : msg.text});
                 if (response == -1) {
                     await bot.sendMessage(msg.chat.id, "По переданной Вами категории не найдено ни одного товара")
                 } else {
-                    await filesSender(msg.text, msg.chat.id);
+                    await filesSender(msg.text, msg.chat.id, vars.folderForCategory);
                     user.subReadyReportsTop100 -= 1;
                     await user.save();
                 }
@@ -549,7 +578,7 @@ bot.on("message", async (msg) => {
                 await bot.sendMessage(msg.chat.id, `
 Top100Kaspi_bot - аналитика продаж на Каспи 
 
-Дата запроса: 16.06.2022
+Дата запроса: ${data.date}
 ••••••••••••••••••••••••••••••••••••••••
 🛍 За 14 дней ≈ ${data.sellsFor14Days} продаж(и)
 ••••••••••••••••••••••••••••••••••••••••
@@ -665,13 +694,22 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/furniture/all/", "category", data, msg, {rep : "категории", repReq : "Мебель"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "home") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -683,13 +721,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/home/all/", "category", data, msg, {rep : "категории", repReq : "Товары для дома и дачи"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "clothes") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -701,13 +744,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category", data, msg, {rep : "категории", repReq : "Одежда"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "jewellery") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -719,13 +767,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/jewelry%20and%20bijouterie/all/", "category", data, msg, {rep : "категории", repReq : "Украшения"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "vehicles") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -737,13 +790,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/car%20goods/all/", "category", data, msg, {rep : "категории", repReq : "Автотовары"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "building") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -755,13 +813,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/construction%20and%20repair/all/", "category", data, msg, {rep : "категории", repReq : "Строительство, ремонт"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "health") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -773,13 +836,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/beauty%20care/all/", "category", data, msg, {rep : "категории", repReq : "Красота и здоровье"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "entertainment") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -791,13 +859,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/leisure/all/", "category", data, msg, {rep : "категории", repReq : "Досуг, книги"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "sport") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -809,13 +882,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category", data, msg, {rep : "категории", repReq : "Спорт, туризм"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "shoes") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -827,13 +905,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/shoes/all/", "category", data, msg, {rep : "категории", repReq : "Обувь"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "children") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -845,13 +928,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category", data, msg, {rep : "категории", repReq : "Детские товары"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "trinkets") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -863,13 +951,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/fashion%20accessories/all/", "category", data, msg, {rep : "категории", repReq : "Аксессуары"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "pharmacy") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -881,13 +974,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/pharmacy/all/", "category", data, msg, {rep : "категории", repReq : "Аптека"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "technique") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -899,13 +997,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/home%20equipment/all/", "category", data, msg, {rep : "категории", repReq : "Бытовая техника"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "computers") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -917,13 +1020,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/computers/all/", "category", data, msg, {rep : "категории", repReq : "Компьютеры"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "grocery") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -935,13 +1043,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/food/all/", "category", data, msg, {rep : "категории", repReq : "Продукты питания"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "gadgets") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -953,13 +1066,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", data, msg, {rep : "категории", repReq : "Телефоны и гаджеты"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "video") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -971,13 +1089,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/tv_audio/all/", "category", data, msg, {rep : "категории", repReq : "ТВ, Аудио, Видео"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "animals") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -989,13 +1112,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/pet%20goods/all/", "category", data, msg, {rep : "категории", repReq : "Товары для животных"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "office") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1007,13 +1135,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/office%20and%20school%20supplies/all/", "category", data, msg, {rep : "категории", repReq : "Канцелярские товары"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "gifts") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1025,13 +1158,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/gifts%20and%20party%20supplies/all/", "category", data, msg, {rep : "категории", repReq : "Подарки, товары для праздников"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "upTo10000") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1043,13 +1181,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B4%D0%BE+10+000+%D1%82", "price", data, msg, {rep : "цене", repReq : "До 10 000 т"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from10000to49999") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1061,13 +1204,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A10+000+-+49+999+%D1%82", "price", data, msg, {rep : "цене", repReq : "10 000 - 49 999 т"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from50000to99999") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1079,13 +1227,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A50+000+-+99+999+%D1%82", "price", data, msg, {rep : "цене", repReq : "50 000 - 99 999 т"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from100000to149999") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1097,13 +1250,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A100+000+-+149+999+%D1%82", "price", data, msg, {rep : "цене", repReq : "100 000 - 149 999 т"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from150000to199999") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1115,13 +1273,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A150+000+-+199+999+%D1%82", "price", data, msg, {rep : "цене", repReq : "150 000 - 199 999 т"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from200000to499999") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1133,13 +1296,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A200+000+-+499+999+%D1%82", "price", data, msg, {rep : "цене", repReq : "200 000 - 499 999 т"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "moreThan500000") {
             if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
                 await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
@@ -1151,13 +1319,18 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
                 return;
             }
+            if(user.isOrderReport) {
+                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+                return;
+            }
 
             user.subReadyReportsTop100 -= 1;
+            user.isOrderReport = true;
             await user.save();
 
             await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
             await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B1%D0%BE%D0%BB%D0%B5%D0%B5+500+000+%D1%82", "price", data, msg, {rep : "цене", repReq : "более 500 000 т"});
-            await filesSender(data, msg.chat.id)
+            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "demoCategory") {
             await bot.sendDocument(msg.chat.id, "./Reports/top100kaspi_bot-demoCategoryReport_.xlsx");
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });

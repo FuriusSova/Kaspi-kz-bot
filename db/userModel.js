@@ -10,7 +10,8 @@ User.init({
     subReportsTop100IfUnlimited : { type: DataTypes.DATE, defaultValue: null }, 
     subReadyReportsTop100 : { type: DataTypes.INTEGER, defaultValue: 0 },
     isOrderBrandReport: { type: DataTypes.BOOLEAN, defaultValue: false },
-    isOrderKeyWordReport: { type: DataTypes.BOOLEAN, defaultValue: false }
+    isOrderKeyWordReport: { type: DataTypes.BOOLEAN, defaultValue: false },
+    isOrderReport : { type: DataTypes.BOOLEAN, defaultValue: false }
 }, { sequelize, modelName: 'user', timestamps: false });
 
 module.exports = User;

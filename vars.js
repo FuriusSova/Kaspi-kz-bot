@@ -298,6 +298,9 @@ const answerQuest6 = `
 Я оплатил за услугу, но доступ не получил, что мне делать?
 
 Вам необходимо связаться с нашим администратором, для этого воспользуйтесь командой /contactadmin`
+const folderForCategory = "1QCMk2iZtNJrH_1ufGSzKjtiSdvytf-0M";
+const folderForBrand = "1QCMk2iZtNJrH_1ufGSzKjtiSdvytf-0M";
+const folderForKeyWord = "1QCMk2iZtNJrH_1ufGSzKjtiSdvytf-0M";
 
 module.exports = {
     greatingText : greatingText,
@@ -315,5 +318,8 @@ module.exports = {
     answerQuest5 : answerQuest5,
     answerQuest6 : answerQuest6,
     buySubscription : buySubscription,
-    inlineKeyboardSubscription : inlineKeyboardSubscription
+    inlineKeyboardSubscription : inlineKeyboardSubscription,
+    folderForBrand : folderForBrand,
+    folderForCategory : folderForCategory,
+    folderForKeyWord : folderForKeyWord
 };
