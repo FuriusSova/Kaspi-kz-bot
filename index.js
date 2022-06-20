@@ -277,7 +277,7 @@ const createFileOnGoogleDrive = async (name, folder) => {
 const checkDemoFiles = async () => {
     const files = fs.readdirSync("./Reports");
 
-    if (files.includes("demoBrandReport.xlsx") && files.includes("demoCategoryReport.xlsx") && files.includes("demoWordReport.xlsx")) {
+    if (files.includes("top100kaspi_bot-demoBrandReport_.xlsx") && files.includes("top100kaspi_bot-demoCategoryReport_.xlsx") && files.includes("top100kaspi_bot-demoWordReport_.xlsx")) {
         return true;
     } else {
         return false;
