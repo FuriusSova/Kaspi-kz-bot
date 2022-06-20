@@ -483,9 +483,7 @@ bot.on("message", async (msg) => {
             }
         );
     }
-    console.log(user.isOrderBrandReport, user.isOrderReport)
     if (user.isOrderBrandReport && !user.isOrderReport && msg.text.indexOf("/") == -1 && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
-        console.log(user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))
         if (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
@@ -521,9 +519,7 @@ bot.on("message", async (msg) => {
         await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите")
         return;
     }
-    //console.log(user.isOrderKeyWordReport, user.isOrderReport)
     if (user.isOrderKeyWordReport && !user.isOrderReport && msg.text.indexOf("/") == -1 && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
-        console.log(user.subReadyReportsTop100 == 0, user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now()))
         if (user.subReadyReportsTop100 == 0 && (user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
@@ -575,6 +571,10 @@ bot.on("message", async (msg) => {
                 const response = await parseTop100(msg.text, "category", "link", msg, { rep: "категории", repReq: msg.text });
                 if (response == -1) {
                     await bot.sendMessage(msg.chat.id, "По переданной Вами категории не найдено ни одного товара")
+                    user.isOrderBrandReport = false;
+                    user.isOrderKeyWordReport = false;
+                    user.isOrderReport = false;
+                    await user.save();
                 } else {
                     await filesSender(msg.text, msg.chat.id, vars.folderForCategory);
                     user.subReadyReportsTop100 -= 1;
@@ -605,7 +605,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
 ••••••••••••••••••••••••••••••••••••••••
 🛍 За 14 дней ≈ ${data.sellsFor14Days} продаж(и)
 ••••••••••••••••••••••••••••••••••••••••
-📆 Кол-во продаж в день ≈ ${Math.round(data.sellsFor14Days / 14)} шт.
+📆 Кол-во продаж в день ≈ ${(data.sellsFor14Days / 14).toFixed(2)} шт.
 ••••••••••••••••••••••••••••••••••••••••
 💳 Примерная выручка ≈ ${data.price} ₸
 ••••••••••••••••••••••••••••••••••••••••
