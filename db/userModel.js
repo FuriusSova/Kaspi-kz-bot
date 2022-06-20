@@ -4,7 +4,7 @@ const sequelize = require("./connection");
 class User extends Model { }
 
 User.init({
-    chat_id: { type: DataTypes.INTEGER, unique: true },
+    chat_id: { type: DataTypes.BIGINT, unique: true },
     subReports: { type: DataTypes.INTEGER, defaultValue: 5 },
     subReportsIfUnlimited : { type: DataTypes.DATE, defaultValue: null }, 
     subReportsTop100IfUnlimited : { type: DataTypes.DATE, defaultValue: null }, 
