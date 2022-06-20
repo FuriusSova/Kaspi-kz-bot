@@ -396,6 +396,8 @@ bot.on("document", async (msg) => {
 })
 
 bot.on("message", async (msg) => {
+    console.log(msg.text)
+    if(!msg.text) return;
     if (msg.text == "/start") {
         await bot.sendMessage(msg.chat.id, vars.greatingText, {
             "reply_markup": {
