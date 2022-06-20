@@ -104,7 +104,7 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
         } else if (flag == "brand" || flag == "price" || flag == "word") {
             sign = "&"
         }
-        /* 
+        /*
         $ = await getHTML(`${url}${sign}page=1`);
         if (!$(".item-card__name-link").attr('href')) return -1;
         $(".item-card__name-link").each(async function (index, elem) {
@@ -170,8 +170,6 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
                 post.category = category;
                 post.sellsFor14Days = sellsFor14Days;
 
-                console.log(priceStr)
-
                 posts.push(post);
             } catch (error) {
                 console.log(error, ": " + element)
@@ -197,6 +195,9 @@ let worksheet;
 
 const createExcel = async (name, msg, posts, repData) => {
     try {
+        let items = posts.sort((a, b) => {
+            if(a["sellsFor14Days"] > b["sellsFor14Days"]) return -1;
+        })
         let lengthCell = 0;
         let lengthCellCategory = 0;
         const date = new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Asia/Almaty' }).slice(0, 10);
@@ -230,7 +231,7 @@ const createExcel = async (name, msg, posts, repData) => {
             { key: 'category' },
             { key: 'link' }
         ];
-        posts.forEach(element => {
+        items.forEach(element => {
             if (lengthCell < element.name.length) lengthCell = element.name.length;
             if (lengthCellCategory < element.category.length) lengthCellCategory = element.category.length;
         });
@@ -241,7 +242,7 @@ const createExcel = async (name, msg, posts, repData) => {
         })
         worksheet.getRow(3).font = { bold: true };
         worksheet.getColumn(3).numFmt = '#,###'; // '_("$"* #,##0.00_);_("$"* (#,##0.00);_("$"* "-"??_);_(@_)'
-        posts.forEach((e, index) => {
+        items.forEach((e, index) => {
             worksheet.addRow({ ...e });
         })
         await workbook.xlsx.writeFile(`./Reports/top100kaspi_bot-${name}Report_${name == "demoCategory" || name == "demoBrand" || name == "demoWord" ? "" : day + month + year}.xlsx`)
@@ -482,8 +483,10 @@ bot.on("message", async (msg) => {
             }
         );
     }
+    console.log(user.isOrderBrandReport, user.isOrderReport)
     if (user.isOrderBrandReport && !user.isOrderReport && msg.text.indexOf("/") == -1 && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
-        if (user.subReadyReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+        console.log(user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))
+        if (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
                     reply_markup: {
@@ -492,7 +495,7 @@ bot.on("message", async (msg) => {
                 });
             user.isOrderBrandReport = false;
             user.isOrderKeyWordReport = false;
-            user.isOrderReport = true;
+            user.isOrderReport = false;
             await user.save();
             return;
         }
@@ -504,18 +507,24 @@ bot.on("message", async (msg) => {
         const resp = await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3A${msg.text}`, "brand", msg.text, msg, { rep: "бренду", repReq: msg.text });
         if (resp == -1) {
             await bot.sendMessage(msg.chat.id, "По переданному Вами бренду не найдено ни одного товара")
+            user.isOrderBrandReport = false;
+            user.isOrderKeyWordReport = false;
+            user.isOrderReport = false;
+            await user.save();
         } else {
             await filesSender(msg.text, msg.chat.id, vars.folderForBrand);
             user.subReadyReportsTop100 -= 1;
             user.isOrderReport = true;
             await user.save();
         }
-    } else if (user.isOrderBrandReport && !user.isOrderReport && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
+    } else if (user.isOrderBrandReport && !user.isOrderReport && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1 && msg.text.indexOf("/") == -1) {
         await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите")
         return;
     }
+    //console.log(user.isOrderKeyWordReport, user.isOrderReport)
     if (user.isOrderKeyWordReport && !user.isOrderReport && msg.text.indexOf("/") == -1 && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
-        if (user.subReadyReportsTop100 == 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+        console.log(user.subReadyReportsTop100 == 0, user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now()))
+        if (user.subReadyReportsTop100 == 0 && (user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
             await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 отчетов по запросу. Оплатите за проверки для работы с ботом.",
                 {
                     reply_markup: {
@@ -524,7 +533,7 @@ bot.on("message", async (msg) => {
                 });
             user.isOrderBrandReport = false;
             user.isOrderKeyWordReport = false;
-            user.isOrderReport = true;
+            user.isOrderReport = false;
             await user.save();
             return;
         }
@@ -536,12 +545,16 @@ bot.on("message", async (msg) => {
         const resp = await parseTop100(`https://kaspi.kz/shop/search/?text=${msg.text}`, "word", msg.text, msg, { rep: "ключевому слову", repReq: msg.text });
         if (resp == -1) {
             await bot.sendMessage(msg.chat.id, "По переданному Вами ключевому слову не найдено ни одного товара")
+            user.isOrderBrandReport = false;
+            user.isOrderKeyWordReport = false;
+            user.isOrderReport = false;
+            await user.save();
         } else {
             await filesSender(msg.text, msg.chat.id, vars.folderForKeyWord);
             user.subReadyReportsTop100 -= 1;
             await user.save();
         }
-    } else if (user.isOrderKeyWordReport && !user.isOrderReport && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1) {
+    } else if (user.isOrderKeyWordReport && !user.isOrderReport && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1 && msg.text.indexOf("/") == -1) {
         await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите")
         return;
     }
@@ -655,6 +668,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
                 }
             }
         );
+        user.isOrderKeyWordReport = false;
         user.isOrderBrandReport = true;
         await user.save();
     };
@@ -682,6 +696,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
                 }
             }
         );
+        user.isOrderBrandReport = false;
         user.isOrderKeyWordReport = true;
         await user.save();
     };
