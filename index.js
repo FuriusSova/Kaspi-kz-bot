@@ -104,28 +104,28 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
         } else if (flag == "brand" || flag == "price" || flag == "word") {
             sign = "&"
         }
-
+        /* 
         $ = await getHTML(`${url}${sign}page=1`);
         if (!$(".item-card__name-link").attr('href')) return -1;
         $(".item-card__name-link").each(async function (index, elem) {
             arrOfLinks.push($(this).attr('href'));
         });
-        /*     
-            for (let i = 1; i <= 9; i++) {
-                console.log(`${url}${sign}page=${i}`);
-                $ = await getHTML(`${url}${sign}page=${i}`);
-                if (!$(".item-card__name-link").attr('href')) return -1;
-                $(".item-card__name-link").each(async function (index, elem) {
-                    if (i !== 9) {
+        */
+        for (let i = 1; i <= 9; i++) {
+            console.log(`${url}${sign}page=${i}`);
+            $ = await getHTML(`${url}${sign}page=${i}`);
+            if (!$(".item-card__name-link").attr('href')) return -1;
+            $(".item-card__name-link").each(async function (index, elem) {
+                if (i !== 9) {
+                    arrOfLinks.push($(this).attr('href'));
+                } else {
+                    if (index < 4) {
                         arrOfLinks.push($(this).attr('href'));
-                    } else {
-                        if (index < 4) {
-                            arrOfLinks.push($(this).attr('href'));
-                        }
                     }
-                });
-            }
-    */
+                }
+            });
+        }
+
         console.log(arrOfLinks);
         for (const element of arrOfLinks) {
             console.log(element)
@@ -1382,7 +1382,6 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 });
 
-/*
 (async function () {
     if (!await checkDemoFiles()) {
         await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "demoCategory", undefined, {rep : "категории", repReq : "Телефоны и гаджеты"});
@@ -1391,4 +1390,4 @@ bot.on('callback_query', async (callbackQuery) => {
 
         await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "demoWord", undefined, {rep : "ключевому слову", repReq : "смартфон"});
     }
-}())*/
+}())
