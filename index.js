@@ -375,7 +375,7 @@ const checkCode = async (msg) => {
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен безлимит на отчёты и проверки! Проверка баланса по команде /balance");
                             }
                         } else {
-                            if (!flag) await bot.sendMessage(msg.chat.id, "К сожалению подтвердить оплату не удалось, пожалуйста отправьте квитанцию об оплате в формате pdf или свяжитесь с администратором по команде /contactadmin")
+                            if (!flag) await bot.sendMessage(msg.chat.id, "Данный чек уже есть в базе, пожалуйста загрузите для проверки новый чек или свяжитесь с администратором /contactadmin")
                             else if (new Date(Date.now()).getMonth() !== month || new Date(Date.now()).getDay() !== day || new Date(Date.now()).getFullYear() !== year) await bot.sendMessage(msg.chat.id, "К сожалению подтвердить оплату не удалось, пожалуйста отправьте квитанцию об оплате в формате pdf или свяжитесь с администратором по команде /contactadmin");
                         }
 
