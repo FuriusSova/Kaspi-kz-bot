@@ -568,7 +568,7 @@ bot.on("message", async (msg) => {
                 await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
                 user.isOrderReport = true;
                 await user.save();
-                const response = await parseTop100(msg.text, "category", "link", msg, { rep: "категории", repReq: "category" });
+                const response = await parseTop100(msg.text, "category", "link", msg, { rep: "категории", repReq: msg.text });
                 if (response == -1) {
                     await bot.sendMessage(msg.chat.id, "По переданной Вами категории не найдено ни одного товара")
                     user.isOrderBrandReport = false;
@@ -576,7 +576,7 @@ bot.on("message", async (msg) => {
                     user.isOrderReport = false;
                     await user.save();
                 } else {
-                    await filesSender(msg.text, msg.chat.id, vars.folderForCategory);
+                    await filesSender("link", msg.chat.id, vars.folderForCategory);
                     user.subReadyReportsTop100 -= 1;
                     await user.save();
                 }
