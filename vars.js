@@ -298,9 +298,9 @@ const answerQuest6 = `
 Я оплатил за услугу, но доступ не получил, что мне делать?
 
 Вам необходимо связаться с нашим администратором, для этого воспользуйтесь командой /contactadmin`
-const folderForCategory = "1QCMk2iZtNJrH_1ufGSzKjtiSdvytf-0M";
-const folderForBrand = "1QCMk2iZtNJrH_1ufGSzKjtiSdvytf-0M";
-const folderForKeyWord = "1QCMk2iZtNJrH_1ufGSzKjtiSdvytf-0M";
+const folderForCategory = "1UgITnbUaJRRzNWqdpswIdUu-Dqq0l_6D";
+const folderForBrand = "1rQELVg-GzZ25Qzau1xKME3XI-7XUhsSC";
+const folderForKeyWord = "1g6EipdsNmOu4KqE4bQhbhdpuxcfT4aIu";
 
 module.exports = {
     greatingText : greatingText,
