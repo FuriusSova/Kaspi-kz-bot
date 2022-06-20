@@ -196,7 +196,7 @@ let worksheet;
 const createExcel = async (name, msg, posts, repData) => {
     try {
         let items = posts.sort((a, b) => {
-            if(a["sellsFor14Days"] > b["sellsFor14Days"]) return -1;
+            if (a["sellsFor14Days"] > b["sellsFor14Days"]) return -1;
         })
         let lengthCell = 0;
         let lengthCellCategory = 0;
@@ -310,10 +310,10 @@ const filesSender = async (data, id, folder) => {
     }
 }
 
-const showBalance = async (text, user) => {
+const showBalance = async (text, text1, user) => {
     return {
         linksReports: (typeof text) == "number" ? user.subReports : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`,
-        top100Ready: (typeof text) == "number" ? user.subReadyReportsTop100 : `безлимит до ${text.slice(0, 2)}.${text.slice(3, 5)}.${text.slice(6, 10)}`
+        top100Ready: (typeof text1) == "number" ? user.subReadyReportsTop100 : `безлимит до ${text1.slice(0, 2)}.${text1.slice(3, 5)}.${text1.slice(6, 10)}`
     }
 }
 
@@ -351,32 +351,32 @@ const checkCode = async (msg) => {
                             if (price == 1490) {
                                 user.subReports += 5;
                                 await user.save();
-                                await bot.sendMessage(msg.chat.id, "Начислено 5 проверок");
+                                await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 проверок! Проверка баланса по команде /balance");
                             } else if (price == 2490) {
                                 user.subReports += 10;
                                 await user.save();
-                                await bot.sendMessage(msg.chat.id, "Начислено 10 проверок");
+                                await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 10 проверок! Проверка баланса по команде /balance");
                             } else if (price == 5990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 await user.save();
-                                await bot.sendMessage(msg.chat.id, "Начислен безлимит на месяц (проверки)");
+                                await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен безлимит на месяц (проверки)! Проверка баланса по команде /balance");
                             } else if (price == 2990) {
                                 user.subReadyReportsTop100 += 1;
                                 await user.save();
-                                await bot.sendMessage(msg.chat.id, "Начислено 1шт Топ100 отчетов");
+                                await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен 1 отчёт! Проверка баланса по команде /balance");
                             } else if (price == 9990) {
                                 user.subReadyReportsTop100 += 5;
                                 await user.save();
-                                await bot.sendMessage(msg.chat.id, "Начислено 5шт Топ100 отчетов");
+                                await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
                             } else if (price == 29990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 await user.save();
-                                await bot.sendMessage(msg.chat.id, "Начислен безлимит на отчёты и проверки (1 месяц)");
+                                await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен безлимит на отчёты и проверки! Проверка баланса по команде /balance");
                             }
                         } else {
-                            if (!flag) await bot.sendMessage(msg.chat.id, "Чек с таким номером уже существует")
-                            else if (new Date(Date.now()).getMonth() !== month || new Date(Date.now()).getDay() !== day || new Date(Date.now()).getFullYear() !== year) await bot.sendMessage(msg.chat.id, "Дата чека не совпадает с сегодняшней");
+                            if (!flag) await bot.sendMessage(msg.chat.id, "К сожалению подтвердить оплату не удалось, пожалуйста отправьте квитанцию об оплате в формате pdf или свяжитесь с администратором по команде /contactadmin")
+                            else if (new Date(Date.now()).getMonth() !== month || new Date(Date.now()).getDay() !== day || new Date(Date.now()).getFullYear() !== year) await bot.sendMessage(msg.chat.id, "К сожалению подтвердить оплату не удалось, пожалуйста отправьте квитанцию об оплате в формате pdf или свяжитесь с администратором по команде /contactadmin");
                         }
 
                         fs.unlinkSync(`./receipts/receipt${msg.chat.id}.pdf`, (err) => {
@@ -432,6 +432,13 @@ bot.on("message", async (msg) => {
         user.subReadyReportsTop100 = 5;
         user.save();
     }
+    if (msg.text == "/test3") {
+        user.subReports = 0;
+        user.subReadyReportsTop100 = 0;
+        user.subReportsIfUnlimited = new Date(2011, 0, 1);
+        user.subReportsTop100IfUnlimited = new Date(2011, 0, 1);
+        user.save();
+    }
     /////////////////////////////////////////////////////// TEST
     if (msg.text == "/help") {
         await bot.sendMessage(msg.chat.id, "Что Вас интересует?",
@@ -447,15 +454,21 @@ bot.on("message", async (msg) => {
     }
     if (msg.text == "/balance") {
         let resp;
-        if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now())) {
-            resp = await showBalance(`${user.subReportsIfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' })}`, user)
+        if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now()) && user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited >= new Date(Date.now())) {
+            resp = await showBalance(`${user.subReportsIfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' })}`, `${user.subReportsTop100IfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' })}`, user)
+            await bot.sendMessage(msg.chat.id, `
+Кол-во ссылок - ${resp.linksReports}
+Кол-во отчетов - ${resp.top100Ready}
+            `);
+        } else if (user.subReportsIfUnlimited && user.subReportsIfUnlimited >= new Date(Date.now()) && user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited <= new Date(Date.now())) {
+            resp = await showBalance(`${user.subReportsIfUnlimited.toLocaleString('en-GB', { timeZone: 'Asia/Almaty' })}`, user.subReadyReportsTop100, user)
             await bot.sendMessage(msg.chat.id, `
 Кол-во ссылок - ${resp.linksReports}
 Кол-во отчетов - ${resp.top100Ready}
             `);
         } else {
-            if (user.subReports == 0) {
-                resp = await showBalance(user.subReports, user);
+            if (user.subReports == 0 && user.subReadyReportsTop100 == 0) {
+                resp = await showBalance(user.subReports, user.subReadyReportsTop100, user);
                 await bot.sendMessage(msg.chat.id, `
 Кол-во ссылок - ${resp.linksReports}
 Кол-во отчетов - ${resp.top100Ready}
@@ -466,7 +479,7 @@ bot.on("message", async (msg) => {
                         }
                     });
             } else {
-                resp = await showBalance(user.subReports, user);
+                resp = await showBalance(user.subReports, user.subReadyReportsTop100, user);
                 await bot.sendMessage(msg.chat.id, `
 Кол-во ссылок - ${resp.linksReports}
 Кол-во отчетов - ${resp.top100Ready}
@@ -1388,7 +1401,7 @@ bot.on('callback_query', async (callbackQuery) => {
             await bot.sendMessage(msg.chat.id, vars.answerQuest6)
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         } else if (data == "chechPay") {
-            await bot.sendMessage(msg.chat.id, "Вышлите пожалуйста квитанцию об оплате боту на проверку")
+            await bot.sendMessage(msg.chat.id, "Вышлите пожалуйста квитанцию (обязательно В ФОРМАТЕ PDF) об оплате боту на проверку")
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         }
     } catch (error) {
@@ -1399,10 +1412,10 @@ bot.on('callback_query', async (callbackQuery) => {
 
 (async function () {
     if (!await checkDemoFiles()) {
-        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "demoCategory", undefined, {rep : "категории", repReq : "Телефоны и гаджеты"});
+        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "demoCategory", undefined, { rep: "категории", repReq: "Телефоны и гаджеты" });
 
-        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand", "demoBrand", undefined, {rep : "бренду", repReq : "Apple"});
+        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand", "demoBrand", undefined, { rep: "бренду", repReq: "Apple" });
 
-        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "demoWord", undefined, {rep : "ключевому слову", repReq : "смартфон"});
+        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "demoWord", undefined, { rep: "ключевому слову", repReq: "смартфон" });
     }
 }())
