@@ -292,8 +292,8 @@ const deleteFile = async (name, date) => {
 }
 
 const filesSender = async (data, id, folder) => {
+    const user = await User.findOne({ where: { chat_id: id } });
     try {
-        const user = await User.findOne({ where: { chat_id: id } });
         const date = new Date(Date.now()).toLocaleString('en-GB', { timeZone: 'Asia/Almaty' }).slice(0, 10);
         const month = date.slice(3, 5);
         const day = date.slice(0, 2);
@@ -421,10 +421,10 @@ bot.onText(/\/addReportsUnlimited (.+)/, async (msg, match) => {
             const findUser = await User.findOne({ where: { username: match[1].slice(0, match[1].indexOf(":")) } });
             if (findUser) {
                 const date = match[1].slice(match[1].indexOf(":") + 1);
-                console.log(`${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`, new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2)))
-                findUser.subReportsIfUnlimited = new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2));
+                console.log(`${date.slice(0, 2)}.${date.slice(3, 5)}.${date.slice(6, 10)}`, new Date(date.slice(6, 10), date.slice(3, 5) - 1, date.slice(0, 2)))
+                findUser.subReportsIfUnlimited = new Date(date.slice(6, 10), date.slice(3, 5) - 1, date.slice(0, 2));
                 await findUser.save();
-                await bot.sendMessage(msg.chat.id, `Подписка оформлена пользователю ${match[1].slice(0, match[1].indexOf(":"))} до ${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`)
+                await bot.sendMessage(msg.chat.id, `Подписка оформлена пользователю ${match[1].slice(0, match[1].indexOf(":"))} до ${date.slice(0, 2)}.${date.slice(3, 5)}.${date.slice(6, 10)}`)
             } else {
                 await bot.sendMessage(msg.chat.id, "Пользователь не найден");
             }
@@ -465,11 +465,33 @@ bot.onText(/\/addTop100ReportsUnlimited (.+)/, async (msg, match) => {
             const findUser = await User.findOne({ where: { username: match[1].slice(0, match[1].indexOf(":")) } });
             if (findUser) {
                 const date = match[1].slice(match[1].indexOf(":") + 1);
-                console.log(`${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`, new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2)))
-                findUser.subReportsIfUnlimited = new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2));
-                findUser.subReportsTop100IfUnlimited = new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2));
+                console.log(`${date.slice(0, 2)}.${date.slice(3, 5)}.${date.slice(6, 10)}`, new Date(date.slice(6, 10), date.slice(3, 5) - 1, date.slice(0, 2)))
+                findUser.subReportsIfUnlimited = new Date(date.slice(6, 10), date.slice(3, 5) - 1, date.slice(0, 2));
+                findUser.subReportsTop100IfUnlimited = new Date(date.slice(6, 10), date.slice(3, 5) - 1, date.slice(0, 2));
                 await findUser.save();
-                await bot.sendMessage(msg.chat.id, `Подписка оформлена пользователю ${match[1].slice(0, match[1].indexOf(":"))} до ${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`)
+                await bot.sendMessage(msg.chat.id, `Подписка оформлена пользователю ${match[1].slice(0, match[1].indexOf(":"))} до ${date.slice(0, 2)}.${date.slice(3, 5)}.${date.slice(6, 10)}`)
+            } else {
+                await bot.sendMessage(msg.chat.id, "Пользователь не найден");
+            }
+        }
+    } catch (error) {
+        await bot.sendMessage(msg.chat.id, "Вы не правильно указали данные");
+        console.log(error)
+    }
+});
+
+bot.onText(/\/resetDatabase (.+)/, async (msg, match) => {
+    try {
+        const user = await User.findOne({ where: { username: msg.chat.username } });
+        if (user.username == "maximseller" || user.username == "Mr_Li13" || user.username == "Furius16") {
+            const resp = match[1];
+            const findUser = await User.findOne({ where: { username: resp } });
+            if (findUser) {
+                findUser.isOrderReport = false;
+                findUser.isOrderBrandReport = false;
+                findUser.isOrderKeyWordReport = false;
+                await findUser.save();
+                await bot.sendMessage(msg.chat.id, "База данных пользователя обновлена")
             } else {
                 await bot.sendMessage(msg.chat.id, "Пользователь не найден");
             }
@@ -599,7 +621,7 @@ bot.on("message", async (msg) => {
         } else {
             await filesSender(msg.text, msg.chat.id, vars.folderForBrand);
             user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
+            //user.isOrderReport = true;
             await user.save();
         }
     } else if (user.isOrderBrandReport && !user.isOrderReport && msg.text.indexOf("Проверка ссылок") == -1 && msg.text.indexOf("Топ100 по категориям") == -1 && msg.text.indexOf("Топ100 по брендам") == -1 && msg.text.indexOf("Топ100 по ключевым словам") == -1 && msg.text.indexOf("Топ100 по цене") == -1 && msg.text.indexOf("/") == -1) {
@@ -806,10 +828,6 @@ bot.on('callback_query', async (callbackQuery) => {
                         }
                     })
                 await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
                 return;
             }
             if (user.isOrderReport) {
@@ -1482,6 +1500,8 @@ bot.on('callback_query', async (callbackQuery) => {
         }
     } catch (error) {
         console.log(error)
+        user.isOrderReport = false;
+        await user.save();
         await bot.sendMessage(msg.chat.id, "Произошла ошибка (отчет может быть еще не готов)")
     }
 });
