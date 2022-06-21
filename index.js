@@ -467,29 +467,6 @@ bot.on("message", async (msg) => {
             username: msg.chat.username
         })
     }
-    /////////////////////////////////////////////////////// TEST
-    if (msg.text == "/test") {
-        user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
-        user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
-        user.save();
-    }
-    if (msg.text == "/test2") {
-        user.subReports = 5;
-        user.subReadyReportsTop100 = 5;
-        user.save();
-    }
-    if (msg.text == "/test3") {
-        user.subReports = 0;
-        user.subReadyReportsTop100 = 0;
-        user.subReportsIfUnlimited = new Date(2011, 0, 1);
-        user.subReportsTop100IfUnlimited = new Date(2011, 0, 1);
-        user.save();
-    }
-    if (msg.text == "/test4") {
-        user.isOrderReport = false;
-        user.save();
-    }
-    /////////////////////////////////////////////////////// TEST
     if (msg.text == "/help") {
         await bot.sendMessage(msg.chat.id, "Что Вас интересует?",
             {
