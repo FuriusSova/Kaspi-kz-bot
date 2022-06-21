@@ -412,6 +412,29 @@ bot.onText(/\/addReports (.+)/, async (msg, match) => {
     }
 });
 
+bot.onText(/\/addReportsUnlimited (.+)/, async (msg, match) => {
+    try {
+        const user = await User.findOne({ where: { username: msg.chat.username } });
+        if (user.username == "maximseller" || user.username == "Mr_Li13" || user.username == "Furius16") {
+            const resp = match[1];
+            console.log(match[1].slice(0, match[1].indexOf(":")), match[1].slice(match[1].indexOf(":") + 1));
+            const findUser = await User.findOne({ where: { username: match[1].slice(0, match[1].indexOf(":")) } });
+            if (findUser) {
+                const date = match[1].slice(match[1].indexOf(":") + 1);
+                console.log(`${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`, new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2)))
+                findUser.subReportsIfUnlimited = new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2));
+                await findUser.save();
+                await bot.sendMessage(msg.chat.id, `Подписка оформлена пользователю ${match[1].slice(0, match[1].indexOf(":"))} до ${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`)
+            } else {
+                await bot.sendMessage(msg.chat.id, "Пользователь не найден");
+            }
+        }
+    } catch (error) {
+        await bot.sendMessage(msg.chat.id, "Вы не правильно указали данные");
+        console.log(error)
+    }
+});
+
 bot.onText(/\/addTop100Reports (.+)/, async (msg, match) => {
     try {
         const user = await User.findOne({ where: { username: msg.chat.username } });
@@ -423,6 +446,30 @@ bot.onText(/\/addTop100Reports (.+)/, async (msg, match) => {
                 findUser.subReadyReportsTop100 += Number(match[1].slice(match[1].indexOf(":") + 1));
                 await findUser.save();
                 await bot.sendMessage(msg.chat.id, `Кол-во отчётов пользователя ${match[1].slice(0, match[1].indexOf(":"))} пополнено на ${Number(match[1].slice(match[1].indexOf(":") + 1))}`)
+            } else {
+                await bot.sendMessage(msg.chat.id, "Пользователь не найден");
+            }
+        }
+    } catch (error) {
+        await bot.sendMessage(msg.chat.id, "Вы не правильно указали данные");
+        console.log(error)
+    }
+});
+
+bot.onText(/\/addTop100ReportsUnlimited (.+)/, async (msg, match) => {
+    try {
+        const user = await User.findOne({ where: { username: msg.chat.username } });
+        if (user.username == "maximseller" || user.username == "Mr_Li13" || user.username == "Furius16") {
+            const resp = match[1];
+            console.log(match[1].slice(0, match[1].indexOf(":")), match[1].slice(match[1].indexOf(":") + 1));
+            const findUser = await User.findOne({ where: { username: match[1].slice(0, match[1].indexOf(":")) } });
+            if (findUser) {
+                const date = match[1].slice(match[1].indexOf(":") + 1);
+                console.log(`${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`, new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2)))
+                findUser.subReportsIfUnlimited = new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2));
+                findUser.subReportsTop100IfUnlimited = new Date(date.slice(6,10), date.slice(3,5)-1, date.slice(0,2));
+                await findUser.save();
+                await bot.sendMessage(msg.chat.id, `Подписка оформлена пользователю ${match[1].slice(0, match[1].indexOf(":"))} до ${date.slice(0,2)}.${date.slice(3,5)}.${date.slice(6,10)}`)
             } else {
                 await bot.sendMessage(msg.chat.id, "Пользователь не найден");
             }
