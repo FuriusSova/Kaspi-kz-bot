@@ -391,13 +391,55 @@ const checkCode = async (msg) => {
     }
 }
 
+bot.onText(/\/addReports (.+)/, async (msg, match) => {
+    try {
+        const user = await User.findOne({ where: { username: msg.chat.username } });
+        if (user.username == "maximseller" || user.username == "Mr_Li13" || user.username == "Furius16") {
+            const resp = match[1];
+            console.log(match[1].slice(0, match[1].indexOf(":")), match[1].slice(match[1].indexOf(":") + 1));
+            const findUser = await User.findOne({ where: { username: match[1].slice(0, match[1].indexOf(":")) } });
+            if (findUser) {
+                findUser.subReports += Number(match[1].slice(match[1].indexOf(":") + 1));
+                await findUser.save();
+                await bot.sendMessage(msg.chat.id, `Кол-во проверок пользователя ${match[1].slice(0, match[1].indexOf(":"))} пополнено на ${Number(match[1].slice(match[1].indexOf(":") + 1))}`)
+            } else {
+                await bot.sendMessage(msg.chat.id, "Пользователь не найден");
+            }
+        }
+    } catch (error) {
+        await bot.sendMessage(msg.chat.id, "Вы не правильно указали данные");
+        console.log(error)
+    }
+});
+
+bot.onText(/\/addTop100Reports (.+)/, async (msg, match) => {
+    try {
+        const user = await User.findOne({ where: { username: msg.chat.username } });
+        if (user.username == "maximseller" || user.username == "Mr_Li13" || user.username == "Furius16") {
+            const resp = match[1];
+            console.log(match[1].slice(0, match[1].indexOf(":")), match[1].slice(match[1].indexOf(":") + 1));
+            const findUser = await User.findOne({ where: { username: match[1].slice(0, match[1].indexOf(":")) } });
+            if (findUser) {
+                findUser.subReadyReportsTop100 += Number(match[1].slice(match[1].indexOf(":") + 1));
+                await findUser.save();
+                await bot.sendMessage(msg.chat.id, `Кол-во отчётов пользователя ${match[1].slice(0, match[1].indexOf(":"))} пополнено на ${Number(match[1].slice(match[1].indexOf(":") + 1))}`)
+            } else {
+                await bot.sendMessage(msg.chat.id, "Пользователь не найден");
+            }
+        }
+    } catch (error) {
+        await bot.sendMessage(msg.chat.id, "Вы не правильно указали данные");
+        console.log(error)
+    }
+});
+
 bot.on("document", async (msg) => {
     await checkCode(msg)
 })
 
 bot.on("message", async (msg) => {
     console.log(msg.text)
-    if(!msg.text) return;
+    if (!msg.text) return;
     if (msg.text == "/start") {
         await bot.sendMessage(msg.chat.id, vars.greatingText, {
             "reply_markup": {
@@ -413,14 +455,16 @@ bot.on("message", async (msg) => {
         const createdUser = await User.findOne({ where: { chat_id: msg.chat.id } });
         if (!createdUser) {
             const newUser = await User.create({
-                chat_id: msg.chat.id
+                chat_id: msg.chat.id,
+                username: msg.chat.username
             })
         }
     }
     const user = await User.findOne({ where: { chat_id: msg.chat.id } });
     if (!user) {
         await User.create({
-            chat_id: msg.chat.id
+            chat_id: msg.chat.id,
+            username: msg.chat.username
         })
     }
     /////////////////////////////////////////////////////// TEST
@@ -588,8 +632,8 @@ bot.on("message", async (msg) => {
                 await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
                 user.isOrderReport = true;
                 await user.save();
-                if(msg.text.includes("%20")) response = await parseTop100(msg.text, "word", "link", msg, { rep: "категории", repReq: msg.text })
-                else response =  await parseTop100(msg.text, "category", "link", msg, { rep: "категории", repReq: msg.text });
+                if (msg.text.includes("%20")) response = await parseTop100(msg.text, "word", "link", msg, { rep: "категории", repReq: msg.text })
+                else response = await parseTop100(msg.text, "category", "link", msg, { rep: "категории", repReq: msg.text });
                 if (response == -1) {
                     await bot.sendMessage(msg.chat.id, "По переданной Вами категории не найдено ни одного товара")
                     user.isOrderBrandReport = false;

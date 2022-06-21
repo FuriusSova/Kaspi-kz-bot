@@ -5,6 +5,7 @@ class User extends Model { }
 
 User.init({
     chat_id: { type: DataTypes.BIGINT, unique: true },
+    username : { type: DataTypes.STRING, unique: true },
     subReports: { type: DataTypes.INTEGER, defaultValue: 5 },
     subReportsIfUnlimited : { type: DataTypes.DATE, defaultValue: new Date(2011, 0, 1) }, 
     subReportsTop100IfUnlimited : { type: DataTypes.DATE, defaultValue: new Date(2011, 0, 1) }, 
