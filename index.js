@@ -441,6 +441,10 @@ bot.on("message", async (msg) => {
         user.subReportsTop100IfUnlimited = new Date(2011, 0, 1);
         user.save();
     }
+    if (msg.text == "/test4") {
+        user.isOrderReport = false;
+        user.save();
+    }
     /////////////////////////////////////////////////////// TEST
     if (msg.text == "/help") {
         await bot.sendMessage(msg.chat.id, "Что Вас интересует?",
@@ -580,10 +584,12 @@ bot.on("message", async (msg) => {
                 return;
             }
             if (user.subReadyReportsTop100 != 0 || user.subReportsTop100IfUnlimited && user.subReportsTop100IfUnlimited >= new Date(Date.now())) {
+                let response;
                 await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
                 user.isOrderReport = true;
                 await user.save();
-                const response = await parseTop100(msg.text, "category", "link", msg, { rep: "категории", repReq: msg.text });
+                if(msg.text.includes("%20")) response = await parseTop100(msg.text, "word", "link", msg, { rep: "категории", repReq: msg.text })
+                else response =  await parseTop100(msg.text, "category", "link", msg, { rep: "категории", repReq: msg.text });
                 if (response == -1) {
                     await bot.sendMessage(msg.chat.id, "По переданной Вами категории не найдено ни одного товара")
                     user.isOrderBrandReport = false;
