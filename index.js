@@ -97,6 +97,7 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
         let $1;
         let arrOfLinks = [];
         let sign;
+        let stopFlag = false;
 
 
         if (flag == "category") {
@@ -112,12 +113,20 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
         });
         */
         for (let i = 1; i <= 9; i++) {
+            stopFlag = true;
             console.log(`${url}${sign}page=${i}`);
             $ = await getHTML(`${url}${sign}page=${i}`);
             if (!$(".item-card__name-link").attr('href')) return -1;
             $(".item-card__name-link").each(async function (index, elem) {
                 if (i !== 9) {
-                    arrOfLinks.push($(this).attr('href'));
+                    if (arrOfLinks.includes($(this).attr('href'))) {
+                        arrOfLinks = [];
+                        sign = sign == "&" ? "?" : "&";
+                        i = 0;
+                        stopFlag = false;
+                    } else if (stopFlag) {
+                        arrOfLinks.push($(this).attr('href'));
+                    }
                 } else {
                     if (index < 4) {
                         arrOfLinks.push($(this).attr('href'));
@@ -254,7 +263,7 @@ const createExcel = async (name, msg, posts, repData) => {
 const createFileOnGoogleDrive = async (name, folder) => {
     const driveService = google.drive({ version: "v3", auth });
     let fileMetaData = {
-        "name": "Report.xlsx",
+        "name": `${name}.xlsx`,
         "parents": [folder]
     }
     let media = {
@@ -527,6 +536,9 @@ bot.on("message", async (msg) => {
                 chat_id: msg.chat.id,
                 username: msg.chat.username
             })
+        } else if (createdUser.username != msg.chat.username) {
+            createdUser.username = msg.chat.username;
+            await createdUser.save();
         }
     }
     const user = await User.findOne({ where: { chat_id: msg.chat.id } });
