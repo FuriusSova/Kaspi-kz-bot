@@ -357,27 +357,27 @@ const checkCode = async (msg) => {
                             })
                             fs.writeFileSync('./receiptId/codes.json', `${JSON.stringify(arrCodes)}`);
 
-                            if (price == 1490) {
+                            if (price == 490) {
                                 user.subReports += 5;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 проверок! Проверка баланса по команде /balance");
-                            } else if (price == 2490) {
+                            } else if (price == 990) {
                                 user.subReports += 10;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 10 проверок! Проверка баланса по команде /balance");
-                            } else if (price == 5990) {
+                            } else if (price == 4990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен безлимит на месяц (проверки)! Проверка баланса по команде /balance");
-                            } else if (price == 2990) {
+                            } else if (price == 1490) {
                                 user.subReadyReportsTop100 += 1;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен 1 отчёт! Проверка баланса по команде /balance");
-                            } else if (price == 9990) {
+                            } else if (price == 5990) {
                                 user.subReadyReportsTop100 += 5;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
-                            } else if (price == 29990) {
+                            } else if (price == 19990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 await user.save();
