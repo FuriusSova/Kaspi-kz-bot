@@ -119,11 +119,14 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
             if (!$(".item-card__name-link").attr('href')) return -1;
             $(".item-card__name-link").each(async function (index, elem) {
                 if (i !== 9) {
-                    if (arrOfLinks.includes($(this).attr('href'))) {
+                    if (arrOfLinks.includes($(this).attr('href')) && i == 2) {
                         arrOfLinks = [];
                         sign = sign == "&" ? "?" : "&";
                         i = 0;
                         stopFlag = false;
+                    } else if (arrOfLinks.includes($(this).attr('href')) && i > 2) {
+                        i = 10;
+                        return false;
                     } else if (stopFlag) {
                         arrOfLinks.push($(this).attr('href'));
                     }
