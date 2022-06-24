@@ -116,7 +116,11 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
             stopFlag = true;
             console.log(`${url}${sign}page=${i}`);
             $ = await getHTML(`${url}${sign}page=${i}`);
-            if (!$(".item-card__name-link").attr('href')) return -1;
+            if (!$(".item-card__name-link").attr('href') && i == 1) {
+                return -1;
+            } else if (!$(".item-card__name-link").attr('href') && i > 1){
+                break;
+            }
             $(".item-card__name-link").each(async function (index, elem) {
                 if (i !== 9) {
                     if (arrOfLinks.includes($(this).attr('href')) && i == 2) {
