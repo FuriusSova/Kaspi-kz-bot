@@ -364,11 +364,11 @@ const checkCode = async (msg) => {
                             })
                             fs.writeFileSync('./receiptId/codes.json', `${JSON.stringify(arrCodes)}`);
 
-                            if (price == 490) {
+                            if (price == 990) {
                                 user.subReports += 5;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 проверок! Проверка баланса по команде /balance");
-                            } else if (price == 990) {
+                            } else if (price == 1490) {
                                 user.subReports += 10;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 10 проверок! Проверка баланса по команде /balance");
@@ -376,11 +376,11 @@ const checkCode = async (msg) => {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен безлимит на месяц (проверки)! Проверка баланса по команде /balance");
-                            } else if (price == 1490) {
+                            } else if (price == 2990) {
                                 user.subReadyReportsTop100 += 1;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен 1 отчёт! Проверка баланса по команде /balance");
-                            } else if (price == 5990) {
+                            } else if (price == 9990) {
                                 user.subReadyReportsTop100 += 5;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
@@ -388,7 +388,7 @@ const checkCode = async (msg) => {
                                 user.subReadyReportsTop100 += 10;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
-                            } else if (price == 19990) {
+                            } else if (price == 49990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 await user.save();
