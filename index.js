@@ -384,6 +384,10 @@ const checkCode = async (msg) => {
                                 user.subReadyReportsTop100 += 5;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
+                            } else if (price == 14990) {
+                                user.subReadyReportsTop100 += 10;
+                                await user.save();
+                                await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
                             } else if (price == 19990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));

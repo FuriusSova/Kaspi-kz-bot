@@ -28,6 +28,7 @@ const buySubscription = `
  • Безлимит на проверки (1 месяц) - 4990 тг
  • 1шт Топ100 отчетов -  1490тг. (любой отчет из Топ100)
  • 5шт Топ100 отчетов - 5990тг. (любой отчет из Топ100)
+ • 10шт Топ100 отчетов - 14990 тг (любой отчет из Топ100)
  • Безлимит на отчёты и проверки (1 месяц - 19990тг. (Любые топ100 отчеты и проверки ссылок)
 `
 const inlineKeyboard = [
@@ -257,6 +258,13 @@ const inlineKeyboardSubscription = [
             text: "5 отчётов (любой отчёт) - 5990тг",
             callback_data : "top100buy5",
             url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=5990"
+        }
+    ],
+    [
+        {
+            text: "10 отчётов (любой отчёт) - 14990тг",
+            callback_data : "top100buy5",
+            url : "https://www.wooppay.com/simpleInvoice?token=eyJraWQiOiJrZXkxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJ3b29wcGF5LmNvbSIsImF1ZCI6Indvb3BwYXkuY29tIiwiZXhwIjoxOTcxMDIzOTY1LCJqdGkiOiJ1a21PNzBRSXJxcWFQTlBDbFZWMGZBIiwiaWF0IjoxNjU1NDA0NzY1LCJuYmYiOjE2NTU0MDQ3NjUsInN1YiI6InNtYXJ0c2hvcF9Ub3AxMDBLYXNwaV9ib3QiLCJ1c2VySWQiOjM5MzM4NjI3LCJ0b2tlblR5cGUiOiJXRUIiLCJkZXZpY2VJZCI6InNhdHVfc21hcnRzaG9wX1RvcDEwMEthc3BpX2JvdCIsImRlc2NyaXB0aW9uIjoiVG9wMTAwS2FzcGlfYm90In0.9OUk2J61ehpHdvb80g2GAgswdczjyJsT2MgKI_sUHBRgwP6MamuQsWcRz6dxKTnyx-8uLza2njCanXeO8YE78g&amount=14990"
         }
     ],
     [
