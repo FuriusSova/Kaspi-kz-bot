@@ -118,7 +118,7 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
             $ = await getHTML(`${url}${sign}page=${i}`);
             if (!$(".item-card__name-link").attr('href') && i == 1) {
                 return -1;
-            } else if (!$(".item-card__name-link").attr('href') && i > 1){
+            } else if (!$(".item-card__name-link").attr('href') && i > 1) {
                 break;
             }
             $(".item-card__name-link").each(async function (index, elem) {
@@ -409,6 +409,30 @@ const checkCode = async (msg) => {
     } catch (error) {
         console.log(error);
     }
+}
+
+const categoriesFunc = async (id, user) => {
+    if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
+        await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+            {
+                reply_markup: {
+                    inline_keyboard: vars.inlineKeyboardSubscription
+                }
+            })
+        await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
+        return false;
+    }
+    if (user.isOrderReport) {
+        await bot.sendMessage(id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
+        return false;
+    }
+
+    user.subReadyReportsTop100 -= 1;
+    user.isOrderReport = true;
+    await user.save();
+
+    await bot.sendMessage(id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
+    return true;
 }
 
 bot.onText(/\/addReports (.+)/, async (msg, match) => {
@@ -843,649 +867,1312 @@ bot.on('callback_query', async (callbackQuery) => {
 
     try {
         if (data == "furniture") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/furniture/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForFuniture
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "home") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/home/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForHome
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "clothes") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category", data, msg, { rep: "категории", repReq: "Одежда" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForClothes
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "jewellery") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/jewelry%20and%20bijouterie/all/", "category", data, msg, { rep: "категории", repReq: "Украшения" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForJewellery
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "vehicles") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/car%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForVehicles
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "building") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/construction%20and%20repair/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForBuilding
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "health") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/beauty%20care/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForHealth
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "entertainment") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/leisure/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForBooks
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "sport") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForSport
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "shoes") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/shoes/all/", "category", data, msg, { rep: "категории", repReq: "Обувь" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForShoes
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "children") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForChildren
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "trinkets") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/fashion%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForTrinkets
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "pharmacy") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/pharmacy/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForPharmacy
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "technique") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/home%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Бытовая техника" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForTechnique
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "computers") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/computers/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForPCs
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "grocery") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/food/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForGrocery
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "gadgets") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForGadgets
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "video") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/tv_audio/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForTV
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "animals") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/pet%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForAnimals
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "office") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
-            }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/office%20and%20school%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForOffice
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         } else if (data == "gifts") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.keyboardForGifts
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
+        } else if (data == "furnitureAll") { ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/furniture/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
+        } else if (data == "furnitureBed") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/bedroom/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/gifts%20and%20party%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
+        } else if (data == "furnitureHall") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/living%20room/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureKitchen") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/kitchen/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureChildrenroom") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/children%20room/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureOfice") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/office/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureBath") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/bathroom/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureLobby") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/entrance%20hall/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureFurniture") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fittings%20and%20components%20for%20furniture/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureCupboard") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/storage%20systems%20and%20shelves/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "furnitureSelling") { ///////FURNITURE/////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/trade%20software/all/", "category", data, msg, { rep: "категории", repReq: "Мебель" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homeAll") { ///////////////////HOME//////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/home/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homeTextilies") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/home%20textiles/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homePlates") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/kitchenware/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homeLightning") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/lighting/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homeInterier") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/home%20interior/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homeHouse") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/household%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homeDacha") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/vegetable%20garden%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "homeClever") { ///////////////////HOME//////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/smart%20house/all/", "category", data, msg, { rep: "категории", repReq: "Товары для дома и дачи" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "jewelleryAll") {///////////////////////Jewellary//////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/jewelry%20and%20bijouterie/all/", "category", data, msg, { rep: "категории", repReq: "Украшения" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "jewelleryJewellery") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/jewelry/all/", "category", data, msg, { rep: "категории", repReq: "Украшения" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "jewelleryBijouterie") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/imitation%20jewelry/all/", "category", data, msg, { rep: "категории", repReq: "Украшения" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "jewelleryEquipment") { ///////////////////////Jewellary//////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/jewelry%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Украшения" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehiclesAll") { ///////////////////////VEHICLES//////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/replacement%20parts/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/tires/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20audio/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/protection%20and%20exterior%20tuning/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/rims/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20lighting/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/luggage%20systems/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles9") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/automotive%20equipments/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles10") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/oils%20and%20technical%20fluids/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles11") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20chemistry%20and%20car%20care%20products/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles12") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20electronics/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles13") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20batteries/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles14") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/auto%20repair%20tools/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles15") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/motorcycle%20gear/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles16") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/car%20anti-theft%20devices/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles17") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/specialty%20vehicles%20and%20mototechnics/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "vehicles19") { //////////////////////////////////////////////VEHICLES//////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/gbo/all/", "category", data, msg, { rep: "категории", repReq: "Автотовары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "clothesAll") { //////////////////CLOTHES/////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fashion/all/", "category", data, msg, { rep: "категории", repReq: "Одежда" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "clothesWomen") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/women%20fashion/all/", "category", data, msg, { rep: "категории", repReq: "Одежда" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "clothesMen") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/men%20fashion/all/", "category", data, msg, { rep: "категории", repReq: "Одежда" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "clothesGirls") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/girl%20fashion/all/", "category", data, msg, { rep: "категории", repReq: "Одежда" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "clothesBoys") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/boy%20fashion/all/", "category", data, msg, { rep: "категории", repReq: "Одежда" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "clothesBabys") { //////////////////CLOTHES/////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/newborn%20clothing/all/", "category", data, msg, { rep: "категории", repReq: "Одежда" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "buildingAll") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/construction%20and%20repair/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/power%20tools/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/plumbing/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/decoration%20materials/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/electrical%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/building%20materials/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/doors/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/heating%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/construction%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building9") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/security%20systems/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building10") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/construction%20protective%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "building11") { /////////////////////BUILDING/////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/gates%20and%20barriers/all/", "category", data, msg, { rep: "категории", repReq: "Строительство, ремонт" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainmentAll") { ////////////////////ENTERTAINMENT////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/leisure/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainment1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/books/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainment2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hobbies%20and%20crafts/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainment3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/party%20games/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainment4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/musical%20instruments/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainment5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fortune%20telling%20and%20esoteric/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainment6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/optical%20instruments/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "entertainment7") {////////////////////ENTERTAINMENT////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/cds%20and%20vinyl/all/", "category", data, msg, { rep: "категории", repReq: "Досуг, книги" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "healthAll") { ////////////////////////HEALTH/////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/beauty%20care/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/nail%20care/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/skin%20care/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hair%20care/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/decorative%20cosmetics/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/body%20care/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/perfumes/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/beauty%20care%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hair%20styling%20and%20care%20tools/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health9") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/oral%20care/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health10") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/massagers/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health11") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/tools%20and%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health12") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/skin%20care%20sets/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health13") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/shaving%20and%20hair%20removal/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health14") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/products%20for%20aromatherapy/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health15") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/shaving%20products/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health16") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/products%20for%20tattoos%20and%20permanent%20makeup/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "health17") {/////////////////////HEALTH/////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/beauty%20salon%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Красота и здоровье" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sportAll") {/////////////////////Sport/////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fishing%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/camping%20and%20hiking/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/cycling/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/winter%20sports/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/sports%20nutrition/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/sports%20protection/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fitness/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hunting%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport9") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/sports%20clothing/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport10") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/outdoor/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport11") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/water%20sports/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport12") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/leisure%20sports/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport13") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/exercise%20and%20fitness/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport14") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/boxing%20and%20martial%20arts/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport15") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/climbing%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport16") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/roller%20skating/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport17") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hockey/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport18") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/yoga%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport19") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/rhythmic%20gymnastics%20and%20dance/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport20") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/self-defense%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport21") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/billiard%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport22") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/sports%20and%20outdoors/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport23") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/powerlifting/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport24") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/equestrian%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "sport25") {////////////////////////////SPORT//////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/track%20and%20field/all/", "category", data, msg, { rep: "категории", repReq: "Спорт, туризм" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "shoesAll") { /////////////////////Shoes////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/shoes/all/", "category", data, msg, { rep: "категории", repReq: "Обувь" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "shoes1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/women%20shoes/all/", "category", data, msg, { rep: "категории", repReq: "Обувь" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "shoes2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/men%20shoes/all/", "category", data, msg, { rep: "категории", repReq: "Обувь" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "shoes3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/girl%20shoes/all/", "category", data, msg, { rep: "категории", repReq: "Обувь" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "shoes4") { /////////////////////Shoes////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/boy%20shoes/all/", "category", data, msg, { rep: "категории", repReq: "Обувь" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "childrenAll") { //////////////CHILDREN///////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "children1") { 
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/toys/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "children2") { 
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/baby%20care/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "children3") { 
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/baby%20strolls%20and%20trips/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "children4") { 
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/childrens%20transport/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "children5") { 
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/playground/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "children6") { //////////////CHILDREN///////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/baby%20feeding/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinketsAll") { //////////////////TRINKETS///////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fashion%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/travel%20gear/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/watches/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hats%20and%20scarves/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/clothing%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fashion%20glasses%20and%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hair%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fashion%20accessory%20sets/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "trinkets9") { //////////////////TRINKETS///////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/wedding%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аксессуары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacyAll") { ///////////////////PHARMACY////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/pharmacy/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/vitamins/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/lenses%20glasses%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/medications%20and%20dietary%20supplements/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/medical%20devices%20and%20consumables/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/medical%20devices%20and%20massagers/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/medical%20devices%20and%20massagers/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/dental%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/enteral%20nutrition/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy9") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/laboratory%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy10") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/medical%20furniture/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "pharmacy11") { ///////////////////PHARMACY////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/ophthalmology/all/", "category", data, msg, { rep: "категории", repReq: "Аптека" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "techniqueAll") { //////////////////////TECHNIQUE////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/home%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Бытовая техника" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "technique1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/kitchen%20appliances/all/", "category", data, msg, { rep: "категории", repReq: "Бытовая техника" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "technique2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/big%20home%20appliances/all/", "category", data, msg, { rep: "категории", repReq: "Бытовая техника" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "technique3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/climate%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "Бытовая техника" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "technique4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/small%20home%20appliances/all/", "category", data, msg, { rep: "категории", repReq: "Бытовая техника" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "technique5") { //////////////////////TECHNIQUE////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/vending%20machines/all/", "category", data, msg, { rep: "категории", repReq: "Бытовая техника" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computersAll") { ///////////////////////////COMPUTERS//////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/computers/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/peripherals/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hardware/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/notebooks%20and%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/office%20equipment%20and%20consumables/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/desktop%20computers/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/network%20hardware/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/tablets%20and%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "computers8") { ///////////////////////////COMPUTERS//////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/electronic%20equipment%20for%20trade/all/", "category", data, msg, { rep: "категории", repReq: "Компьютеры" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gadgetsAll") { /////////////////////////GADGETS/////////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gadgets1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/phone%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gadgets2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/gadgets/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gadgets3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/smartphones/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gadgets4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/mobiles/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gadgets5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/cordless%20telephones/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gadgets6") { /////////////////////////GADGETS/////////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/satellite%20phones%20and%20communicators/all/", "category", data, msg, { rep: "категории", repReq: "Телефоны и гаджеты" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "groceryAll") { //////////////////////////////GROCERY///////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/food/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/alcohol/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/pastry/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/tea%20and%20coffee/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/water%20and%20beverages/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/dairy%20and%20eggs/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/grains%20and%20pasta/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/canned%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/chips%20and%20nuts/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery9") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/sugar%20salt%20spices/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery10") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/spices%20and%20seasoning/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery11") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/frozen%20foods/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery12") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/sausages%20and%20meat%20delicacies/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery13") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/seafood/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery14") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/meat%20and%20poultry/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery15") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/everything%20for%20baking/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery16") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fruits%20and%20vegetables/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery17") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/bread%20and%20bakery/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery18") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/ready%20meal/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery19") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/freeze%20dried%20food%20on%20a%20camping%20trip/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "grocery20") { ////////////////////////GROCERY//////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/soy%20vegetable%20meat%20sausages%20sausages/all/", "category", data, msg, { rep: "категории", repReq: "Продукты питания" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "videoAll") { ////////////////////////VIDEO/////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/tv_audio/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "video1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/audio/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "video2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/headphones/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "video3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/photo_video/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "video4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/entertainment/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "video5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/video/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "video6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/tvs/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "video7") { ////////////////////////VIDEO/////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/stage%20equipment/all/", "category", data, msg, { rep: "категории", repReq: "ТВ, Аудио, Видео" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animalsAll") { ///////////////////////ANIMALS/////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/pet%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/cat%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/dog%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/pet%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/veterinary%20pharmacy/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/fish%20and%20reptiles%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/hygiene%20and%20care%20for%20animals/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/pet%20grooming/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals8") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/rodents%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals9") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/livestock%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "animals10") { /////////////////////////ANIMALS////////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/bird%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Товары для животных" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "officeAll") { ///////////////////OFFICE///////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/office%20and%20school%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/paper%20products/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/writing%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/office%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/school%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/demonstration%20boards/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/trade%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office7") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/drawing%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "office8") { //////////////////////////////OFFICE////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/post-press%20tools/all/", "category", data, msg, { rep: "категории", repReq: "Канцелярские товары" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "giftsAll") { ///////////////////GIFTS//////////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/gifts%20and%20party%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gifts1") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/gifts/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gifts2") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/flowers%20and%20bouquets/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gifts3") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/new%20year%20decor/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gifts4") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/holiday%20decorations/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gifts5") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/gift%20wrapping%20supplies/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gifts6") {
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/carnival%20accessories/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
+        } else if (data == "gifts7") { ////////////////////////GIFTS//////////////////////
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/souvenirs/all/", "category", data, msg, { rep: "категории", repReq: "Подарки, товары для праздников" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
+            }
         } else if (data == "upTo10000") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B4%D0%BE+10+000+%D1%82", "price", data, msg, { rep: "цене", repReq: "До 10 000 т" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B4%D0%BE+10+000+%D1%82", "price", data, msg, { rep: "цене", repReq: "До 10 000 т" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from10000to49999") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A10+000+-+49+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "10 000 - 49 999 т" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A10+000+-+49+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "10 000 - 49 999 т" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from50000to99999") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A50+000+-+99+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "50 000 - 99 999 т" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A50+000+-+99+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "50 000 - 99 999 т" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from100000to149999") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A100+000+-+149+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "100 000 - 149 999 т" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A100+000+-+149+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "100 000 - 149 999 т" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from150000to199999") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A150+000+-+199+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "150 000 - 199 999 т" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A150+000+-+199+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "150 000 - 199 999 т" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "from200000to499999") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A200+000+-+499+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "200 000 - 499 999 т" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A200+000+-+499+999+%D1%82", "price", data, msg, { rep: "цене", repReq: "200 000 - 499 999 т" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "moreThan500000") {
-            if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-                await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
-                    {
-                        reply_markup: {
-                            inline_keyboard: vars.inlineKeyboardSubscription
-                        }
-                    })
-                await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
-                return;
+            if (await categoriesFunc(msg.chat.id, user)) {
+                await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B1%D0%BE%D0%BB%D0%B5%D0%B5+500+000+%D1%82", "price", data, msg, { rep: "цене", repReq: "более 500 000 т" });
+                await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-            if (user.isOrderReport) {
-                await bot.sendMessage(msg.chat.id, "Запрошенный ранее отчёт еще не сформирован, пожалуйста подождите");
-                return;
-            }
-
-            user.subReadyReportsTop100 -= 1;
-            user.isOrderReport = true;
-            await user.save();
-
-            await bot.sendMessage(msg.chat.id, "Отчёт формируется, пожалуйста подождите (10-15 минут)")
-            await parseTop100("https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3Aprice%3A%D0%B1%D0%BE%D0%BB%D0%B5%D0%B5+500+000+%D1%82", "price", data, msg, { rep: "цене", repReq: "более 500 000 т" });
-            await filesSender(data, msg.chat.id, vars.folderForCategory)
         } else if (data == "demoCategory") {
             await bot.sendDocument(msg.chat.id, "./Reports/top100kaspi_bot-demoCategoryReport_.xlsx");
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
@@ -1520,6 +2207,13 @@ bot.on('callback_query', async (callbackQuery) => {
         } else if (data == "chechPay") {
             await bot.sendMessage(msg.chat.id, "Вышлите пожалуйста квитанцию (обязательно В ФОРМАТЕ PDF) об оплате боту на проверку")
             await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
+        } else if (data == "comeback") {
+            await bot.editMessageReplyMarkup({
+                inline_keyboard: vars.inlineKeyboard
+            }, {
+                chat_id: msg.chat.id,
+                message_id: msg.message_id
+            });
         }
     } catch (error) {
         console.log(error)
