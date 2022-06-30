@@ -9,7 +9,7 @@ User.init({
     subReports: { type: DataTypes.INTEGER, defaultValue: 5 },
     subReportsIfUnlimited : { type: DataTypes.DATE, defaultValue: new Date(2011, 0, 1) }, 
     subReportsTop100IfUnlimited : { type: DataTypes.DATE, defaultValue: new Date(2011, 0, 1) }, 
-    subReadyReportsTop100 : { type: DataTypes.INTEGER, defaultValue: 1 },
+    subReadyReportsTop100 : { type: DataTypes.INTEGER, defaultValue: 2 },
     isOrderBrandReport: { type: DataTypes.BOOLEAN, defaultValue: false },
     isOrderKeyWordReport: { type: DataTypes.BOOLEAN, defaultValue: false },
     isOrderReport : { type: DataTypes.BOOLEAN, defaultValue: false }
