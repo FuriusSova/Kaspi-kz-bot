@@ -419,7 +419,6 @@ const categoriesFunc = async (id, user) => {
                     inline_keyboard: vars.inlineKeyboardSubscription
                 }
             })
-        await bot.answerCallbackQuery({ callback_query_id: callbackQuery.id });
         return false;
     }
     if (user.isOrderReport) {
@@ -1603,27 +1602,27 @@ bot.on('callback_query', async (callbackQuery) => {
                 await parseTop100("https://kaspi.kz/shop/c/child%20goods/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
                 await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-        } else if (data == "children1") { 
+        } else if (data == "children1") {
             if (await categoriesFunc(msg.chat.id, user)) {
                 await parseTop100("https://kaspi.kz/shop/c/toys/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
                 await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-        } else if (data == "children2") { 
+        } else if (data == "children2") {
             if (await categoriesFunc(msg.chat.id, user)) {
                 await parseTop100("https://kaspi.kz/shop/c/baby%20care/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
                 await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-        } else if (data == "children3") { 
+        } else if (data == "children3") {
             if (await categoriesFunc(msg.chat.id, user)) {
                 await parseTop100("https://kaspi.kz/shop/c/baby%20strolls%20and%20trips/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
                 await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-        } else if (data == "children4") { 
+        } else if (data == "children4") {
             if (await categoriesFunc(msg.chat.id, user)) {
                 await parseTop100("https://kaspi.kz/shop/c/childrens%20transport/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
                 await filesSender(data, msg.chat.id, vars.folderForCategory)
             }
-        } else if (data == "children5") { 
+        } else if (data == "children5") {
             if (await categoriesFunc(msg.chat.id, user)) {
                 await parseTop100("https://kaspi.kz/shop/c/playground/all/", "category", data, msg, { rep: "категории", repReq: "Детские товары" });
                 await filesSender(data, msg.chat.id, vars.folderForCategory)
