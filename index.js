@@ -413,7 +413,7 @@ const checkCode = async (msg) => {
 
 const categoriesFunc = async (id, user) => {
     if ((user.subReadyReportsTop100 == 0 && !user.subReportsTop100IfUnlimited) || (user.subReadyReportsTop100 == 0 && user.subReportsTop100IfUnlimited <= new Date(Date.now()))) {
-        await bot.sendMessage(msg.chat.id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
+        await bot.sendMessage(id, "У Вас закончились запросы на топ 100 готовых отчётов. Оплатите за проверки для работы с ботом.",
             {
                 reply_markup: {
                     inline_keyboard: vars.inlineKeyboardSubscription
