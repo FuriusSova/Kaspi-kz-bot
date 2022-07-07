@@ -119,6 +119,7 @@ const parseTop100 = async (url, flag, name, msg, repData) => {
             if (!$(".item-card__name-link").attr('href') && i == 1) {
                 return -1;
             } else if (!$(".item-card__name-link").attr('href') && i > 1) {
+                console.log("break")
                 break;
             }
             $(".item-card__name-link").each(async function (index, elem) {
