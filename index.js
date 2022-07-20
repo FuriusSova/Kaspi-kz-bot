@@ -2225,10 +2225,10 @@ bot.on('callback_query', async (callbackQuery) => {
 
 (async function () {
     if (!await checkDemoFiles()) {
-        await parseTop100("https://kaspi.kz/shop/c/smartphones%20and%20gadgets/all/", "category", "demoCategory", undefined, { rep: "категории", repReq: "Телефоны и гаджеты" });
+        await parseTop100("https://kaspi.kz/shop/c/smartphones/all/", "category", "demoCategory", undefined, { rep: "категории", repReq: "Смартфоны" });
 
-        await parseTop100(`https://kaspi.kz/shop/c/categories/?q=%3Acategory%3ACategories%3AmanufacturerName%3AApple`, "brand", "demoBrand", undefined, { rep: "бренду", repReq: "Apple" });
+        await parseTop100(`https://kaspi.kz/shop/c/categories/brand-samsung/?q=%3Acategory%3ACategories`, "brand", "demoBrand", undefined, { rep: "бренду", repReq: "Samsung" });
 
-        await parseTop100(`https://kaspi.kz/shop/search/?text=смартфон`, "word", "demoWord", undefined, { rep: "ключевому слову", repReq: "смартфон" });
+        await parseTop100(`https://kaspi.kz/shop/search/?text=кондиционер`, "word", "demoWord", undefined, { rep: "ключевому слову", repReq: "кондиционер" });
     }
 }())
