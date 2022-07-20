@@ -140,7 +140,7 @@ const inlineKeyboard = [
     ],
     [
         {
-            text: 'Пробный отчет по категории "Телефоны и гаджеты"',
+            text: 'Пробный отчет по категории "Смартфоны"',
             callback_data : "demoCategory"
         }
     ]

@@ -818,7 +818,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
                     inline_keyboard: [
                         [
                             {
-                                text: 'Пробный отчет по бренду "Apple"',
+                                text: 'Пробный отчет по бренду "Samsung"',
                                 callback_data: "demoBrand"
                             }
                         ]
@@ -846,7 +846,7 @@ Top100Kaspi_bot - аналитика продаж на Каспи
                     inline_keyboard: [
                         [
                             {
-                                text: 'Пробный отчет по ключевому слову "смартфон"',
+                                text: 'Пробный отчет по ключевому слову "кондиционер"',
                                 callback_data: "demoWord"
                             }
                         ]
