@@ -546,6 +546,22 @@ bot.onText(/\/resetDatabase (.+)/, async (msg, match) => {
     }
 });
 
+bot.onText(/\/sendMessage (.+)/, async (msg, match) => {
+    try {
+        const user = await User.findOne({ where: { username: msg.chat.username } });
+        if (user.username == "maximseller" || user.username == "Mr_Li13" || user.username == "Furius16") {
+            const resp = match.input;
+            const users = await User.findAll();
+            for (const el of users) {
+                await bot.sendMessage(el.chat_id, resp.slice(resp.indexOf("/sendMessage") + 12))
+            }
+        }
+    } catch (error) {
+        await bot.sendMessage(msg.chat.id, "Вы не правильно указали данные");
+        console.log(error)
+    }
+});
+
 bot.on("document", async (msg) => {
     await checkCode(msg)
 })
