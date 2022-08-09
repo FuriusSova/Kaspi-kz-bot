@@ -12,7 +12,9 @@ User.init({
     subReadyReportsTop100 : { type: DataTypes.INTEGER, defaultValue: 2 },
     isOrderBrandReport: { type: DataTypes.BOOLEAN, defaultValue: false },
     isOrderKeyWordReport: { type: DataTypes.BOOLEAN, defaultValue: false },
-    isOrderReport : { type: DataTypes.BOOLEAN, defaultValue: false }
+    isOrderReport : { type: DataTypes.BOOLEAN, defaultValue: false },
+    summaryPayment : { type: DataTypes.INTEGER, defaultValue: 0 },
+    dateOfLastPayment : { type: DataTypes.STRING }
 }, { sequelize, modelName: 'user', timestamps: false });
 
 module.exports = User;

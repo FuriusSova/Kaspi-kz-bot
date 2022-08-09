@@ -367,31 +367,45 @@ const checkCode = async (msg) => {
 
                             if (price == 990) {
                                 user.subReports += 5;
+                                user.summaryPayment += 990;
+                                user.dateOfLastPayment = date;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 проверок! Проверка баланса по команде /balance");
                             } else if (price == 1490) {
                                 user.subReports += 10;
+                                user.summaryPayment += 1490;
+                                user.dateOfLastPayment = date;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 10 проверок! Проверка баланса по команде /balance");
                             } else if (price == 4990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
+                                user.summaryPayment += 4990;
+                                user.dateOfLastPayment = date;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен безлимит на месяц (проверки)! Проверка баланса по команде /balance");
                             } else if (price == 2990) {
                                 user.subReadyReportsTop100 += 1;
+                                user.summaryPayment += 2990;
+                                user.dateOfLastPayment = date;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен 1 отчёт! Проверка баланса по команде /balance");
                             } else if (price == 9990) {
                                 user.subReadyReportsTop100 += 5;
+                                user.summaryPayment += 9990;
+                                user.dateOfLastPayment = date;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
                             } else if (price == 14990) {
                                 user.subReadyReportsTop100 += 10;
+                                user.summaryPayment += 14990;
+                                user.dateOfLastPayment = date;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислено 5 отчётов! Проверка баланса по команде /balance");
                             } else if (price == 29990) {
                                 user.subReportsIfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
                                 user.subReportsTop100IfUnlimited = new Date(new Date(Date.now()).setMonth(new Date(Date.now()).getMonth() + 1));
+                                user.summaryPayment += 29990;
+                                user.dateOfLastPayment = date;
                                 await user.save();
                                 await bot.sendMessage(msg.chat.id, "Поздравляем, Вам начислен безлимит на отчёты и проверки! Проверка баланса по команде /balance");
                             }
@@ -560,6 +574,48 @@ bot.onText(/\/sendMessage (.+)/, async (msg, match) => {
                 });
             }
         }
+    } catch (error) {
+        await bot.sendMessage(msg.chat.id, "Произошла ошибка: " + error);
+        console.log(error)
+    }
+});
+
+bot.onText(/\/checkUsers/, async (msg) => {
+    try {
+        let workbook = new Excel.Workbook();;
+        let worksheet = workbook.addWorksheet('Юзеры');
+        worksheet.getRow(1).values = ["ID пользователя", "Username", "Внесенная сумма", "Дата последней оплаты"];
+        worksheet.columns = [
+            { key: 'chat_id' },
+            { key: 'username' },
+            { key: 'summaryPayment' },
+            { key: 'dateOfLastPayment' }
+        ];
+
+        worksheet.columns.forEach(column => {
+            column.width = "ID пользователя".length + 5;
+        })
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getColumn(3).numFmt = '#,###';
+
+        const user = await User.findOne({ where: { username: msg.chat.username } });
+        if (user.username == "maximseller" || user.username == "Mr_Li13" || user.username == "Furius16") {
+            const users = await User.findAll();
+            for (const el of users) {
+                if (el.summaryPayment > 0) {
+                    console.log(el)
+                    worksheet.addRow({ chat_id : el.chat_id, username : el.username, summaryPayment : el.summaryPayment, dateOfLastPayment : el.dateOfLastPayment });
+                }
+            }
+        }
+        await workbook.xlsx.writeFile(`./Reports/Users.xlsx`)
+        await bot.sendDocument(msg.chat.id, "./Reports/Users.xlsx").then(() => {
+            fs.unlinkSync(`./Reports/Users.xlsx`, err => {
+                if (err) throw err; // не удалось удалить файл
+                console.log('Файл успешно удалён');
+            });
+        })
+
     } catch (error) {
         await bot.sendMessage(msg.chat.id, "Произошла ошибка: " + error);
         console.log(error)
