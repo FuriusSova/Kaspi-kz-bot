@@ -553,11 +553,15 @@ bot.onText(/\/sendMessage (.+)/, async (msg, match) => {
             const resp = match.input;
             const users = await User.findAll();
             for (const el of users) {
-                await bot.sendMessage(el.chat_id, resp.slice(resp.indexOf("/sendMessage") + 12))
+                await bot.sendMessage(el.chat_id, resp.slice(resp.indexOf("/sendMessage") + 12)).catch(function (error) {
+                    if (error.response && error.response.statusCode === 403) {
+                        console.log(`User with id: ${el.chat_id} blocked the bot`)
+                    }
+                });
             }
         }
     } catch (error) {
-        await bot.sendMessage(msg.chat.id, "Вы не правильно указали данные");
+        await bot.sendMessage(msg.chat.id, "Произошла ошибка: " + error);
         console.log(error)
     }
 });
