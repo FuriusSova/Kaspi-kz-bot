@@ -603,7 +603,6 @@ bot.onText(/\/checkUsers/, async (msg) => {
             const users = await User.findAll();
             for (const el of users) {
                 if (el.summaryPayment > 0) {
-                    console.log(el)
                     worksheet.addRow({ chat_id : el.chat_id, username : el.username, summaryPayment : el.summaryPayment, dateOfLastPayment : el.dateOfLastPayment });
                 }
             }
